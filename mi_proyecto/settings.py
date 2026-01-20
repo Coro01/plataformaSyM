@@ -1,4 +1,5 @@
 import os # Importación esencial para la configuración de MEDIA
+import dj_database_url  # <--- Agrega esta línea
 from pathlib import Path
 
 # Construye rutas dentro del proyecto como esta: BASE_DIR / 'subdir'.
@@ -54,14 +55,14 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'mi_proyecto.urls'
 
 # Database (SQLite3 - No requiere servidor externo)
+# Configuración de Base de Datos Inteligente
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        # La ruta al archivo de la base de datos:
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        # Esta URL se usará cuando estés en tu PC (Local)
+        default='postgresql://postgres:SyMAutomation2022*@db.davyfwkbdqvfwfuftvam.supabase.co:5432/postgres',
+        conn_max_age=600
+    )
 }
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates', 
