@@ -1,0 +1,446 @@
+{% extends "control_horas/base.html" %}
+{% load humanize %}
+
+{% block title %}Gestión RR.HH. - Solicitudes{% endblock %}
+
+{% block extra_head %}
+    <style>
+        /* ========================================= */
+        /* ESTILOS UNIFICADOS - GESTIÓN DE SOLICITUDES */
+        /* ========================================= */
+
+        /* --- TÍTULO PRINCIPAL UNIFICADO --- */
+        .page-main-title {
+            color: #1f2937;
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .page-main-title i {
+            color: #800020;
+        }
+
+        /* --- CARDS UNIFICADAS --- */
+        .unified-card {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .unified-card-header {
+            background-color: #800020;
+            color: #ffffff;
+            padding: 1rem 1.25rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: none;
+        }
+
+        .unified-card-header h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        /* --- TABLA UNIFICADA --- */
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead {
+            background-color: #f8f8f8;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .table thead th {
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 1rem;
+            border: none;
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #e5e7eb;
+            color: #1f2937;
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f8f8;
+            transition: background-color 0.2s ease;
+        }
+
+        .table tbody td strong {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .table tbody td.small {
+            font-size: 0.875rem;
+        }
+
+        .table tbody td .text-muted {
+            color: #6b7280 !important;
+        }
+
+        /* --- BADGES UNIFICADOS --- */
+        .badge {
+            font-weight: 600;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .badge.bg-primary {
+            background-color: #800020 !important;
+            color: #ffffff;
+        }
+
+        .badge.bg-warning {
+            background-color: #ffc107 !important;
+            color: #000000;
+        }
+
+        .badge.bg-success {
+            background-color: #0f5132 !important;
+            color: #ffffff;
+        }
+
+        .badge.bg-danger {
+            background-color: #dc3545 !important;
+            color: #ffffff;
+        }
+
+        /* --- BOTONES UNIFICADOS --- */
+        .btn {
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-success {
+            background-color: #0f5132;
+            border-color: #0f5132;
+        }
+
+        .btn-success:hover {
+            background-color: #0a3622;
+            border-color: #0a3622;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(15, 81, 50, 0.2);
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background-color: #bb2d3b;
+            border-color: #bb2d3b;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(220, 53, 69, 0.2);
+        }
+
+        .btn-secondary {
+            background-color: #6b7280;
+            border-color: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4b5563;
+            border-color: #4b5563;
+        }
+
+        .btn-primary {
+            background-color: #800020;
+            border-color: #800020;
+        }
+
+        .btn-primary:hover {
+            background-color: #6a001a;
+            border-color: #6a001a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(128, 0, 32, 0.2);
+        }
+
+        /* --- ALERTAS UNIFICADAS --- */
+        .alert {
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .alert-success .alert-heading {
+            color: #0f5132;
+        }
+
+        /* --- MODAL UNIFICADO --- */
+        .modal-content {
+            border-radius: 8px;
+            overflow: hidden;
+            border: none;
+        }
+
+        .modal-header {
+            padding: 1rem 1.25rem;
+            border-bottom: none;
+        }
+
+        .modal-header.bg-primary {
+            background-color: #800020 !important;
+        }
+
+        .modal-header.bg-danger {
+            background-color: #dc3545 !important;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem 1.25rem;
+            color: #1f2937;
+        }
+
+        .modal-body ul {
+            background-color: #f8f8f8;
+            padding: 1rem 1.25rem;
+            border-radius: 6px;
+            border-left: 4px solid #800020;
+        }
+
+        .modal-body ul li {
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .modal-body ul li:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.25rem;
+            background-color: #f8f8f8;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .page-main-title {
+                font-size: 1.5rem;
+            }
+
+            .table thead th,
+            .table tbody td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.85rem;
+            }
+
+            .btn {
+                padding: 0.375rem 0.75rem;
+                font-size: 0.85rem;
+            }
+
+            .unified-card-header {
+                font-size: 1rem;
+            }
+        }
+    </style>
+{% endblock %} 
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12">
+            
+            {# TÍTULO PRINCIPAL UNIFICADO #}
+            <h1 class="page-main-title">
+                <i class="bi bi-list-check"></i>
+                Gestión de Solicitudes
+            </h1>
+
+            {# MENSAJES DE DJANGO #}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {# CARD DE SOLICITUDES PENDIENTES #}
+            <div class="unified-card">
+                <div class="unified-card-header">
+                    <h5>Solicitudes Pendientes de Aprobación</h5>
+                </div>
+
+                {% if pendientes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Funcionario</th>
+                                    <th>Fecha Libre Solicitada</th>
+                                    <th>Horas</th>
+                                    <th>Motivo</th>
+                                    <th>Solicitud creada</th>
+                                    <th class="text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sol in pendientes %}
+                                    <tr data-solicitud-id="{{ sol.id }}" 
+                                        data-empleado="{{ sol.empleado.username|capfirst }}" 
+                                        data-fecha="{{ sol.fecha_libre|date:'d/M/Y' }}"
+                                        data-horas="{{ sol.horas_solicitadas|default_if_none:'8:00:00' }}"> 
+                                        
+                                        <td class="small text-muted">{{ sol.id }}</td>
+                                        <td><strong>{{ sol.empleado.username|capfirst }}</strong></td>
+                                        <td>
+                                            <span class="badge bg-primary">
+                                                {{ sol.fecha_libre|date:"d/M/Y" }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-warning">
+                                                {{ sol.horas_solicitadas }}
+                                            </span>
+                                        </td>
+                                        
+                                        <td class="small text-truncate" style="max-width: 250px;" title="{{ sol.motivo }}">
+                                            {{ sol.motivo|truncatechars:70 }}
+                                        </td>
+                                        
+                                        <td>
+                                            <span class="small text-muted">{{ sol.fecha_solicitud|date:"d/M/y H:i" }}</span>
+                                        </td>
+                                        
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-success btn-sm me-2 action-btn"
+                                                data-action="APROBADO" data-sol-id="{{ sol.id }}" 
+                                                data-bs-toggle="modal" data-bs-target="#confirmModal">
+                                                <i class="bi bi-check-circle me-1"></i> Aprobar
+                                            </button>
+                                            
+                                            <button type="button" class="btn btn-danger btn-sm action-btn"
+                                                data-action="RECHAZADO" data-sol-id="{{ sol.id }}" 
+                                                data-bs-toggle="modal" data-bs-target="#confirmModal">
+                                                <i class="bi bi-x-circle me-1"></i> Rechazar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-success m-4 text-center" role="alert">
+                        <h4 class="alert-heading">🥳 ¡Excelente!</h4>
+                        <p class="mb-0">No hay solicitudes pendientes de gestión en este momento.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# MODAL DE CONFIRMACIÓN #}
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="confirmForm" method="post" action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" id="modalAccion" value="">
+                    
+                    <div class="modal-header bg-danger text-white" id="modalHeader">
+                        <h5 class="modal-title" id="confirmModalLabel">Confirmar Gestión</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <p class="mb-3">¿Estás seguro de que deseas <strong id="modalActionText"></strong> la solicitud de:</p>
+                        <ul class="list-unstyled fw-bold">
+                            <li><i class="bi bi-person-fill me-2" style="color: #800020;"></i>Empleado: <span id="modalEmpleado"></span></li>
+                            <li><i class="bi bi-calendar-fill me-2" style="color: #800020;"></i>Fecha Libre: <span id="modalFecha"></span></li>
+                            <li><i class="bi bi-clock-fill me-2" style="color: #800020;"></i>Horas Solicitadas: <span id="modalHoras"></span></li>
+                        </ul>
+                        <p class="text-muted small mb-0">Esta acción es irreversible.</p>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger" id="modalConfirmButton">Confirmar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    {# JAVASCRIPT #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var confirmModal = document.getElementById('confirmModal');
+            const URL_PATTERN = "{% url 'control_horas:aprobar_rechazar_solicitud' 99999 %}"; 
+            
+            confirmModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var action = button.getAttribute('data-action'); 
+                var solId = button.getAttribute('data-sol-id');
+                var row = button.closest('tr');
+                
+                var empleado = row.getAttribute('data-empleado');
+                var fecha = row.getAttribute('data-fecha');
+                var horas = row.getAttribute('data-horas');
+                
+                var modalHeader = confirmModal.querySelector('#modalHeader');
+                var modalForm = confirmModal.querySelector('#confirmForm');
+                var modalAccionInput = confirmModal.querySelector('#modalAccion');
+                var modalActionText = confirmModal.querySelector('#modalActionText');
+                var modalConfirmButton = confirmModal.querySelector('#modalConfirmButton');
+                
+                confirmModal.querySelector('#modalEmpleado').textContent = empleado;
+                confirmModal.querySelector('#modalFecha').textContent = fecha;
+                confirmModal.querySelector('#modalHoras').textContent = horas;
+                modalAccionInput.value = action;
+                
+                var finalUrl = URL_PATTERN.replace('99999', solId); 
+                modalForm.setAttribute('action', finalUrl); 
+                
+                if (action === 'APROBADO') { 
+                    modalActionText.textContent = 'APROBAR';
+                    modalHeader.className = 'modal-header bg-primary text-white'; 
+                    modalConfirmButton.className = 'btn btn-primary';
+                    modalConfirmButton.textContent = 'Aprobar Solicitud';
+                } else if (action === 'RECHAZADO') { 
+                    modalActionText.textContent = 'RECHAZAR';
+                    modalHeader.className = 'modal-header bg-danger text-white'; 
+                    modalConfirmButton.className = 'btn btn-danger';
+                    modalConfirmButton.textContent = 'Rechazar Solicitud';
+                }
+            });
+        });
+    </script>
+{% endblock %}

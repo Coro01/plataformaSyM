@@ -1,0 +1,301 @@
+{% extends "control_horas/base.html" %}
+{% load static %}
+
+{% block title %}Nueva Empresa{% endblock %}
+{% block page_title %}Registrar Nueva Empresa{% endblock %}
+
+{% block horizontal_breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'control_horas:main_dashboard' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'clientes:dashboard' %}">Clientes</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'clientes:empresas' %}">Empresas</a></li>
+        <li class="breadcrumb-item active">Nueva</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root { 
+        --color-burdeo: #800020; 
+        --color-burdeo-soft: #f8e6e9; 
+        --color-gris-oscuro: #4a4a4a; 
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    }
+    
+    .form-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        background: white;
+        overflow: hidden;
+    }
+    
+    .form-card .card-header {
+        background: linear-gradient(135deg, white 0%, #f8f9fa 100%);
+        border-bottom: 3px solid var(--color-burdeo-soft);
+        font-weight: 700;
+        color: var(--color-burdeo);
+        padding: 2rem;
+        position: relative;
+    }
+    
+    .form-card .card-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, var(--color-burdeo), #600018, var(--color-burdeo));
+    }
+    
+    .header-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--color-burdeo-soft), #fce4e9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--color-burdeo);
+        margin-right: 1rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--color-gris-oscuro);
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-label i {
+        color: var(--color-burdeo);
+    }
+    
+    .required-field::after {
+        content: "*";
+        color: var(--color-burdeo);
+        margin-left: 4px;
+        font-weight: bold;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        padding: 0.875rem 1.25rem;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .form-control:focus {
+        border-color: var(--color-burdeo);
+        box-shadow: 0 0 0 0.2rem rgba(128, 0, 32, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    .btn-burdeo {
+        background: linear-gradient(135deg, var(--color-burdeo) 0%, #600018 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 1rem 2.5rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(128, 0, 32, 0.3);
+    }
+    
+    .btn-burdeo:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(128, 0, 32, 0.5);
+        color: white;
+    }
+    
+    .btn-secondary {
+        border-radius: 12px;
+        padding: 1rem 2.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    
+    .info-alert {
+        background: linear-gradient(135deg, var(--color-burdeo-soft) 0%, #fce4e9 100%);
+        border-left: 5px solid var(--color-burdeo);
+        color: var(--color-gris-oscuro);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-top: 2rem;
+        box-shadow: 0 4px 12px rgba(128, 0, 32, 0.1);
+    }
+    
+    .info-alert i {
+        font-size: 1.3rem;
+        color: var(--color-burdeo);
+    }
+    
+    .form-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        border: 2px solid #e9ecef;
+    }
+    
+    .section-title {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--color-burdeo);
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--color-burdeo-soft);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <div class="card form-card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <div class="header-icon">
+                            <i class="bi bi-building-add"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1">Registro de Nueva Empresa</h5>
+                            <small class="text-muted">Complete los datos del cliente</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="form-section">
+                            <div class="section-title">
+                                <i class="bi bi-building me-2"></i> Información Principal
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label required-field">
+                                    <i class="bi bi-building-fill"></i>
+                                    Nombre de la Empresa
+                                </label>
+                                {{ form.nombre }}
+                                {% if form.nombre.errors %}
+                                    <div class="text-danger small mt-2">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.nombre.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label">
+                                        <i class="bi bi-card-text"></i>
+                                        RUC / Identificación Fiscal
+                                    </label>
+                                    {{ form.ruc }}
+                                    {% if form.ruc.errors %}
+                                        <div class="text-danger small mt-2">
+                                            <i class="bi bi-exclamation-circle me-1"></i>
+                                            {{ form.ruc.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label">
+                                        <i class="bi bi-telephone-fill"></i>
+                                        Teléfono de Contacto
+                                    </label>
+                                    {{ form.telefono }}
+                                    {% if form.telefono.errors %}
+                                        <div class="text-danger small mt-2">
+                                            <i class="bi bi-exclamation-circle me-1"></i>
+                                            {{ form.telefono.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <div class="section-title">
+                                <i class="bi bi-envelope me-2"></i> Datos de Contacto
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <i class="bi bi-envelope-fill"></i>
+                                    Email Corporativo
+                                </label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small mt-2">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.email.errors }}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted d-block mt-2">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Se utilizará para envío de reportes y notificaciones
+                                </small>
+                            </div>
+                            
+                            <div class="mb-0">
+                                <label class="form-label">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                    Dirección Física
+                                </label>
+                                {{ form.direccion }}
+                                {% if form.direccion.errors %}
+                                    <div class="text-danger small mt-2">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.direccion.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="info-alert">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-info-circle-fill me-3"></i>
+                                <div>
+                                    <strong>Campos Obligatorios</strong><br>
+                                    Los campos marcados con <strong style="color: var(--color-burdeo);">*</strong> son obligatorios para el registro. Los demás campos son opcionales pero recomendados para mantener una base de datos completa.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-4 border-top">
+                            <a href="{% url 'clientes:empresas' %}" class="btn btn-secondary px-5">
+                                <i class="bi bi-x-circle me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-burdeo px-5">
+                                <i class="bi bi-check-circle-fill me-2"></i>Guardar Empresa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,419 @@
+{% extends "control_horas/base.html" %}
+{% load humanize %} 
+{% block horizontal_breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'control_horas:main_dashboard' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'compras:compras_dashboard' %}">Compras</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'compras:deposito_dashboard' %}">Deposito</a></li>
+        
+
+        <li class="breadcrumb-item active" aria-current="page">Inventario</li>
+    </ol>
+</nav>
+{% endblock horizontal_breadcrumbs %}
+
+{% block page_title %}{% endblock page_title %}
+{% block content %}
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+    <style>
+        /* Estilos CSS Base */
+        :root {
+            --burgundy-main: #7D1935; 
+            --burgundy-hover: #5A1327;
+            --burgundy-light-accent: #B44A68;
+            --soft-gray-bg: #f5f7fa;
+            --text-dark: #1f2937;
+            --critico-bg: #fee2e2; 
+            --warning-bg: #fef3c7;
+        }
+        .text-burgundy-main { color: var(--burgundy-main); }
+        .bg-burgundy-main { background-color: var(--burgundy-main); }
+        .hover\:bg-burgundy-hover:hover { background-color: var(--burgundy-hover); }
+        .shadow-elevated { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .bg-critico { background-color: var(--critico-bg); }
+        .bg-warning { background-color: var(--warning-bg); }
+        body { font-family: 'Inter', sans-serif; background-color: var(--soft-gray-bg); }
+        .table-header-bg { background-color: var(--burgundy-main); }
+        .row-hover-normal:hover { background-color: #f0f4f7; }
+        .hover-critico:hover { background-color: rgba(254, 226, 226, 1); }
+        .hover-warning:hover { background-color: rgba(254, 243, 199, 1); }
+        
+        /* Estilos para el menú de autocompletado de jQuery UI */
+        .ui-autocomplete {
+            max-height: 250px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 0.75rem; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); 
+            z-index: 1000;
+        }
+        .ui-menu-item.ui-state-focus { 
+            background-color: #f0f4f7 !important; 
+            border: none !important;
+        }
+    </style>
+
+    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 min-h-screen antialiased bg-[var(--soft-gray-bg)]">
+        
+        <div class="flex flex-col md:flex-row justify-between items-end mb-10 pb-4 border-b-4 border-burgundy-main">
+            <div class="mb-4 md:mb-0">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 flex items-center">
+                    <i class="bi bi-boxes text-burgundy-main me-4 text-4xl"></i> 
+                    Gestión de Inventario
+                </h1>
+                <p class="text-gray-600 mt-2 text-md sm:text-lg font-medium">Visualización y control de existencias en tiempo real.</p>
+            </div>
+            
+            <div>
+                <a href="{% url 'compras:deposito_dashboard' %}" 
+                    class="inline-flex items-center justify-center rounded-xl border border-transparent bg-burgundy-main px-6 py-3 text-sm font-bold text-white shadow-xl hover:bg-burgundy-hover transition duration-300 transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-burgundy-main/50 w-full md:w-auto">
+                    <i class="bi bi-house-door-fill mr-2"></i> 
+                    Volver al Menu Deposito
+                </a>
+            </div>
+        </div>
+
+        <form method="GET" class="bg-white p-6 sm:p-8 mb-12 rounded-3xl shadow-elevated ring-1 ring-gray-100 transition duration-300 hover:shadow-elevated-lg">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6 border-b pb-3 border-gray-100">Opciones de Filtrado</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                
+                <div class="col-span-1 md:col-span-2">
+                    <label for="search" class="block text-sm font-semibold text-gray-700">Buscar (Producto, SKU, Marca o Modelo)</label>
+                    <div class="mt-2 relative rounded-xl shadow-inner">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="bi bi-search text-gray-400"></i>
+                        </div>
+                        <input type="text" 
+                                name="search" 
+                                id="search" 
+                                placeholder="Escriba para buscar y obtener sugerencias..." 
+                                value="{{ search_query|default:'' }}"
+                                class="block w-full rounded-xl border-gray-300 pl-10 focus:ring-burgundy-main sm:text-sm p-3.5 transition duration-200">
+                        
+                        <input type="hidden" name="exact_code" id="exact_code" value="{{ exact_code_query|default:'' }}">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="ubicacion" class="block text-sm font-semibold text-gray-700">Ubicación</label>
+                    <select name="ubicacion" id="ubicacion" 
+                            class="mt-2 block w-full rounded-xl border-gray-300 shadow-inner focus:ring-burgundy-main sm:text-sm p-3.5 bg-white transition duration-200">
+                        <option value="" {% if not ubicacion_query %}selected{% endif %}>Todas las Ubicaciones</option>
+                        {% for ubicacion in ubicaciones_list %}
+                            <option value="{{ ubicacion }}" {% if ubicacion_query == ubicacion %}selected{% endif %}>
+                                {{ ubicacion }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="estado" class="block text-sm font-semibold text-gray-700">Estado de Stock</label>
+                    <select name="estado" id="estado" 
+                            class="mt-2 block w-full rounded-xl border-gray-300 shadow-inner focus:ring-burgundy-main sm:text-sm p-3.5 bg-white transition duration-200">
+                        <option value="" {% if not estado_query %}selected{% endif %}>Todos</option>
+                        <option value="critico" {% if estado_query == 'critico' %}selected{% endif %}>🚨 Stock Crítico</option>
+                        <option value="bajo" {% if estado_query == 'bajo' %}selected{% endif %}>⚠️ Stock Bajo</option>
+                        <option value="optimo" {% if estado_query == 'optimo' %}selected{% endif %}>🟢 Stock Óptimo</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mt-8 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+                <a href="{% url 'compras:deposito' %}" class="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-md hover:bg-gray-100 transition duration-150 transform hover:translate-y-[-1px]">
+                    <i class="bi bi-trash-fill mr-2"></i> Limpiar Filtros
+                </a>
+                <button type="submit" id="apply-filters-btn" class="inline-flex items-center justify-center rounded-xl border border-transparent bg-burgundy-main px-6 py-3 text-sm font-bold text-white shadow-xl hover:bg-burgundy-hover transition duration-300 transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-burgundy-main/50">
+                    <i class="bi bi-filter-square-fill mr-2"></i> Aplicar Filtros
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-8 flow-root hidden lg:block">
+            <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                    
+                    <div class="rounded-3xl ring-1 ring-gray-200 shadow-elevated overflow-hidden"> 
+                        <table class="min-w-full divide-y divide-gray-200 table-auto">
+                            
+                            <thead class="table-header-bg"> 
+                                <tr>
+                                    <th scope="col" class="py-4 pl-6 pr-3 text-left text-xs font-semibold text-white uppercase tracking-wider">SKU</th>
+                                    <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">PRODUCTO (MARCA/MODELO)</th>
+                                    <th scope="col" class="px-3 py-4 text-center text-xs font-semibold text-white uppercase tracking-wider">STOCK ACTUAL</th>
+                                    <th scope="col" class="px-3 py-4 text-center text-xs font-semibold text-white uppercase tracking-wider">UBICACIÓN</th>
+                                    <th scope="col" class="px-3 py-4 text-right text-xs font-semibold text-white uppercase tracking-wider">Precio GS</th>
+                                    <th scope="col" class="px-3 py-4 text-right text-xs font-semibold text-white uppercase tracking-wider">Precio USD</th>
+                                    <th scope="col" class="relative py-4 pl-3 pr-6 text-center text-xs font-semibold text-white uppercase tracking-wider">ESTADO</th>
+                                </tr>
+                            </thead>
+                            
+                            <tbody class="bg-white divide-y divide-gray-100" id="inventory-table-body">
+                            {% for item in inventario_list %}
+                                {% with stock=item.Cantidad|default:0 min_stock=item.MinimoAdmisible|default:0 %}
+                                    <tr data-url="{% url 'compras:detalle_producto' pk=item.CodigoProducto %}" 
+                                        class="inventory-item 
+                                            {% if stock <= min_stock %}
+                                                bg-critico/70 hover-critico 
+                                            {% elif stock <= min_stock|add:10 %}
+                                                bg-warning/70 hover-warning
+                                            {% else %}
+                                                bg-white row-hover-normal
+                                            {% endif %}
+                                            cursor-pointer transition duration-200 ease-in-out">
+
+                                        <td class="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-mono font-extrabold text-burgundy-main sku-info">
+                                            {{ item.CodigoProducto|default:"N/D" }}
+                                        </td>
+                                        
+                                        <td class="px-3 py-4 text-sm font-bold text-gray-900 max-w-sm product-info">
+                                            <span class="text-base">{{ item.Producto|default:"SIN NOMBRE" }}</span>
+                                            <p class="text-xs text-gray-500 font-normal mt-0.5 truncate">{{ item.Marca|default:"N/A" }} / {{ item.Modelo|default:"N/A" }}</p>
+                                        </td>
+
+                                        <td class="whitespace-nowrap px-3 py-4 text-center">
+                                            <div class="inline-block p-2 rounded-xl w-full max-w-24
+                                                {% if stock <= min_stock %}bg-red-200 text-red-800{% elif stock <= min_stock|add:10 %}bg-amber-200 text-amber-800{% else %}bg-teal-100 text-teal-700{% endif %}">
+                                                <span class="text-xl font-black tabular-nums">
+                                                    {{ stock|floatformat:0 }}
+                                                </span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-1">Mín: {{ min_stock|floatformat:0 }}</p>
+                                        </td>
+
+                                        <td class="whitespace-nowrap px-3 py-4 text-sm font-extrabold text-center">
+                                            <span class="inline-flex items-center rounded-full bg-burgundy-main/10 px-3 py-1 text-xs font-semibold text-burgundy-main ring-1 ring-burgundy-main/20">
+                                                {{ item.Ubicacion|default:"S/U" }}
+                                            </span>
+                                        </td>
+
+                                        <td class="px-3 py-4 text-sm font-extrabold text-right tabular-nums text-gray-900">
+                                            <span class="text-xs text-gray-500 mr-1">₲</span>{{ item.PrecioGS|default:0|floatformat:0|intcomma }}
+                                        </td>
+                                        
+                                        <td class="px-3 py-4 text-sm font-medium text-right tabular-nums text-gray-700">
+                                            <span class="text-xs text-gray-500 mr-1">$</span>{{ item.PrecioUSD|default:0|floatformat:2|intcomma }}
+                                        </td>
+
+                                        <td class="relative whitespace-nowrap py-4 pl-3 pr-6 text-center text-sm font-medium">
+                                            {% if stock <= min_stock %}
+                                                <span class="inline-flex items-center rounded-full bg-red-100 px-4 py-1 text-xs font-bold text-red-800 ring-1 ring-red-400 shadow-sm">
+                                                    <i class="bi bi-exclamation-octagon-fill mr-1 text-sm"></i> CRÍTICO
+                                                </span>
+                                            {% elif stock <= min_stock|add:10 %}
+                                                <span class="inline-flex items-center rounded-full bg-amber-100 px-4 py-1 text-xs font-bold text-amber-800 ring-1 ring-amber-400 shadow-sm">
+                                                    <i class="bi bi-exclamation-triangle-fill mr-1 text-sm"></i> BAJO
+                                                </span>
+                                            {% else %}
+                                                <span class="inline-flex items-center rounded-full bg-teal-100 px-4 py-1 text-xs font-bold text-teal-700 ring-1 ring-teal-400 shadow-sm">
+                                                    <i class="bi bi-check-circle-fill mr-1 text-sm"></i> ÓPTIMO
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endwith %}
+                            {% empty %}
+                                <tr id="no-results-row-django">
+                                    <td colspan="7" class="py-16 text-center text-gray-500 text-xl font-medium bg-gray-50">
+                                        <i class="bi bi-x-octagon text-5xl mb-3 text-gray-300"></i>
+                                        <p>No se encontraron productos que coincidan con los filtros aplicados.</p>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-8 flow-root lg:hidden">
+            <h2 class="text-2xl font-bold mb-5 text-gray-800 border-b pb-2">Detalle de Stock (Móvil)</h2>
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2" id="inventory-cards-container">
+                {% for item in inventario_list %}
+                    {% with stock=item.Cantidad|default:0 min_stock=item.MinimoAdmisible|default:0 %}
+                        
+                        <div data-url="{% url 'compras:detalle_producto' pk=item.CodigoProducto %}"
+                             class="inventory-item inventory-card p-6 rounded-3xl shadow-elevated ring-1 cursor-pointer transition duration-300 transform hover:scale-[1.02] hover:shadow-elevated-lg
+                             {% if stock <= min_stock %}
+                                 ring-red-400 bg-critico/70
+                             {% elif stock <= min_stock|add:10 %}
+                                 ring-warning/90 bg-warning/70
+                             {% else %}
+                                 ring-gray-200 bg-white
+                             {% endif %}">
+                            
+                            <div class="flex justify-between items-start mb-3 border-b pb-3 border-gray-200">
+                                <div class="pr-4">
+                                    <p class="text-xl font-extrabold text-burgundy-main font-mono sku-info">
+                                        {{ item.CodigoProducto|default:"N/D" }}
+                                    </p>
+                                    <p class="text-sm text-gray-600 font-medium mt-1"><i class="bi bi-geo-alt-fill mr-1"></i> Ubicación: <span class="font-bold text-burgundy-main">{{ item.Ubicacion|default:"S/U" }}</span></p>
+                                </div>
+                                
+                                <div class="text-right flex-shrink-0">
+                                    <span class="text-5xl font-black tabular-nums leading-none
+                                        {% if stock <= min_stock %}text-red-800{% elif stock <= min_stock|add:10 %}text-amber-800{% else %}text-teal-700{% endif %}">
+                                        {{ stock|floatformat:0 }}
+                                    </span>
+                                    <p class="text-xs text-gray-500 mt-1">Mín: {{ min_stock|floatformat:0 }}</p>
+                                </div>
+                            </div>
+
+                            <h3 class="text-lg font-bold text-gray-900 leading-tight product-name-info">{{ item.Producto|default:"SIN NOMBRE" }}</h3>
+                            <p class="text-sm text-gray-500 mb-4 brand-model-info">{{ item.Marca|default:"N/A" }} / {{ item.Modelo|default:"N/A" }}</p>
+                            
+                            <div class="mt-4 space-y-2">
+                                
+                                <p class="text-sm font-medium text-gray-700 truncate">
+                                    <i class="bi bi-cash-stack mr-1 text-burgundy-main"></i> Precio Unitario GS: 
+                                    <span class="font-bold tabular-nums">₲ {{ item.PrecioGS|default:0|floatformat:0|intcomma }}</span>
+                                </p>
+
+                                <p class="text-sm font-medium text-gray-700 truncate">
+                                    <i class="bi bi-currency-dollar mr-1 text-burgundy-main"></i> Precio Unitario USD: 
+                                    <span class="font-bold tabular-nums">$ {{ item.PrecioUSD|default:0|floatformat:2|intcomma }}</span>
+                                </p>
+                                
+                                <div class="pt-2">
+                                    {% if stock <= min_stock %}
+                                        <span class="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-800 shadow-md">
+                                            <i class="bi bi-exclamation-octagon-fill mr-1 text-sm"></i> STOCK CRÍTICO
+                                        </span>
+                                    {% elif stock <= min_stock|add:10 %}
+                                        <span class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 shadow-md">
+                                            <i class="bi bi-exclamation-triangle-fill mr-1 text-sm"></i> STOCK BAJO
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center rounded-full bg-teal-100 px-3 py-1 text-xs font-bold text-teal-700 shadow-md">
+                                            <i class="bi bi-check-circle-fill mr-1 text-sm"></i> STOCK ÓPTIMO
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endwith %}
+                {% empty %}
+                    <p id="no-results-card-django" class="col-span-1 sm:col-span-2 py-10 text-center text-gray-500 text-lg rounded-3xl bg-white shadow-elevated ring-1 ring-gray-200">
+                        <i class="bi bi-search text-5xl mb-3 text-gray-300"></i>
+                        <p class="font-semibold">No se encontraron productos que coincidan con los filtros.</p>
+                    </p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ***************************************************************
+        // CORRECCIÓN CLAVE: Definir _renderItem en el prototipo antes del .autocomplete
+        // ***************************************************************
+        $.ui.autocomplete.prototype._renderItem = function(ul, item) {
+            // Aseguramos valores para evitar errores si algún campo falta
+            const codigo = item.codigo || 'N/D';
+            const nombre = item.nombre || 'Producto Desconocido';
+            const stock = item.stock !== undefined && item.stock !== null ? item.stock : 'N/D';
+            const unidad = item.unidad || 'N/A'; // Usado para mostrar Modelo/Unidad
+
+            let display = `
+                <div class="p-2">
+                    <span class="font-bold text-burgundy-main font-mono block text-sm">${codigo}</span>
+                    <span class="text-base text-gray-800 leading-tight">${nombre}</span>
+                    <span class="text-xs text-gray-500 mt-1">
+                        <i class="bi bi-box-seam mr-1"></i>
+                        Stock: <span class="font-bold">${stock}</span> | Unidad: ${unidad}
+                    </span>
+                </div>
+            `;
+            
+            return $( "<li>" )
+                .append( $( "<div>" ).html(display) )
+                .appendTo( ul );
+        };
+
+        $(function() {
+            // CONSTANTES Y SELECTORES
+            const AUTOCOMPLETE_URL = "{% url 'compras:search_products_ajax' %}"; 
+            const searchInput = $("#search");
+            const exactCodeInput = $("#exact_code"); 
+
+            // INICIALIZACIÓN DEL AUTOCOMPLETADO
+            searchInput.autocomplete({
+                source: function(request, response) {
+                    // Si el término es muy corto, no hacemos la llamada AJAX
+                    if (request.term.length < 3) {
+                        return; 
+                    }
+                    
+                    $.ajax({
+                        url: AUTOCOMPLETE_URL,
+                        dataType: "json",
+                        data: { q: request.term }, 
+                        success: function(data) { response(data); },
+                        error: function(xhr, status, error) {
+                            console.error("Error al obtener el autocompletado:", error);
+                            response([]); 
+                        }
+                    });
+                },
+                minLength: 3, 
+                
+                select: function(event, ui) {
+                    // Al seleccionar, llenar el campo de texto con el 'label' formateado
+                    searchInput.val(ui.item.label);
+                    // Llenar el campo oculto con el código exacto (SKU)
+                    exactCodeInput.val(ui.item.codigo); 
+                    
+                    // Enviar el formulario para aplicar el filtro exacto
+                    searchInput.closest('form').submit(); 
+                    return false; 
+                },
+
+                change: function(event, ui) {
+                    if (!ui.item) {
+                        // Si no se selecciona un ítem (ej. borra o sale del foco), limpia el código exacto
+                        exactCodeInput.val('');
+                    }
+                },
+            });
+            
+            // Limpiar código exacto si el campo de búsqueda se vacía manualmente
+            searchInput.on('keyup', function() {
+                if ($(this).val().length === 0) {
+                    exactCodeInput.val('');
+                }
+            });
+
+            // Script para navegación de filas y tarjetas
+            const clickableElements = document.querySelectorAll('tr[data-url], div[data-url].inventory-card');
+            
+            clickableElements.forEach(element => {
+                const url = element.getAttribute('data-url');
+                if (url) {
+                    element.style.cursor = 'pointer'; 
+                    element.addEventListener('click', function(event) {
+                        // Previene la redirección si se hace clic en elementos interactivos anidados
+                        if (event.target.closest('a') || event.target.closest('button') || event.target.closest('select')) {
+                            return; 
+                        }
+                        window.location.href = url; 
+                    });
+                }
+            });
+        });
+    </script>
+
+{% endblock content %}

@@ -1,0 +1,400 @@
+{% extends "control_horas/base.html" %}
+{% load static %}
+
+{% block title %}Asistencias - Reportes{% endblock %}
+{% block page_title %}Reportes de Asistencia{% endblock %}
+
+{% block horizontal_breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'control_horas:main_dashboard' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'clientes:dashboard' %}">Clientes</a></li>
+        <li class="breadcrumb-item active">Asistencias</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root { 
+        --color-burdeo: #800020; 
+        --color-burdeo-soft: #f8e6e9; 
+        --color-gris-oscuro: #4a4a4a; 
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    }
+    
+    .search-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        background: white;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .search-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, var(--color-burdeo), #600018, var(--color-burdeo));
+        background-size: 200% 100%;
+        animation: shimmer 3s linear infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    
+    .table-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        background: white;
+        overflow: hidden;
+    }
+    
+    .btn-burdeo {
+        background: linear-gradient(135deg, var(--color-burdeo) 0%, #600018 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        box-shadow: 0 4px 12px rgba(128, 0, 32, 0.3);
+    }
+    
+    .btn-burdeo:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(128, 0, 32, 0.5);
+        color: white;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--color-burdeo);
+        box-shadow: 0 0 0 0.2rem rgba(128, 0, 32, 0.15);
+    }
+    
+    .input-group-text {
+        border-radius: 12px 0 0 12px;
+        border: 2px solid #e9ecef;
+        border-right: none;
+        background: white;
+    }
+    
+    .input-group .form-control {
+        border-left: none;
+        border-radius: 0 12px 12px 0;
+    }
+    
+    .table thead th {
+        background: linear-gradient(135deg, var(--color-burdeo-soft) 0%, #fce4e9 100%);
+        color: var(--color-gris-oscuro);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        border: none;
+        padding: 1.25rem 1rem;
+    }
+    
+    .table tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #f5f5f5;
+    }
+    
+    .table tbody tr:hover {
+        background: linear-gradient(90deg, rgba(248, 230, 233, 0.4) 0%, rgba(248, 230, 233, 0.1) 100%);
+        transform: scale(1.01);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    
+    .badge-codigo {
+        background: linear-gradient(135deg, var(--color-burdeo-soft) 0%, #fce4e9 100%);
+        color: var(--color-burdeo);
+        font-weight: 700;
+        padding: 0.6rem 1rem;
+        border-radius: 10px;
+        font-family: 'Courier New', Courier, monospace;
+        border: 2px solid var(--color-burdeo);
+        display: inline-block;
+        letter-spacing: 0.5px;
+    }
+
+    .text-diagnostico {
+        font-size: 0.85rem;
+        color: #666;
+        display: block;
+        max-width: 300px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .btn-action {
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        border: 2px solid #e9ecef;
+        background: white;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .btn-action i {
+        font-size: 1.1rem;
+    }
+    
+    .pagination {
+        margin-bottom: 0;
+    }
+    
+    .page-link {
+        border-radius: 8px;
+        margin: 0 0.25rem;
+        border: 2px solid #e9ecef;
+        color: var(--color-gris-oscuro);
+        font-weight: 600;
+    }
+    
+    .page-link:hover {
+        background: var(--color-burdeo-soft);
+        color: var(--color-burdeo);
+        border-color: var(--color-burdeo);
+    }
+    
+    .page-item.disabled .page-link {
+        background: white;
+        border-color: var(--color-burdeo);
+    }
+    
+    .empty-state {
+        padding: 5rem 2rem;
+        text-align: center;
+    }
+    
+    .empty-state i {
+        font-size: 6rem;
+        color: #ddd;
+        margin-bottom: 2rem;
+        opacity: 0.5;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+    
+    .user-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 2px solid var(--color-burdeo-soft);
+        font-size: 0.75rem;
+        font-weight: 700;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .badge-attachments {
+        background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+        color: #0c5460;
+        border-radius: 12px;
+        padding: 0.35rem 0.7rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    
+    <div class="card search-card mb-4">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-lg-9">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-5">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-search" style="color: var(--color-burdeo);"></i>
+                                </span>
+                                <input type="text" name="search" class="form-control" 
+                                       placeholder="Buscar por Nº, empresa, diagnóstico..." 
+                                       value="{{ search_query }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="empresa" class="form-select">
+                                <option value="">📁 Todas las empresas</option>
+                                {% for empresa in empresas %}
+                                <option value="{{ empresa.id }}" {% if empresa_id == empresa.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ empresa.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-burdeo w-100">
+                                <i class="bi bi-funnel-fill me-1"></i> Filtrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-lg-3 text-end mt-3 mt-lg-0">
+                    <a href="{% url 'clientes:crear_reporte' %}" class="btn btn-burdeo w-100">
+                        <i class="bi bi-plus-circle-fill me-2"></i>Nuevo Reporte
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card table-card">
+        <div class="card-body p-0">
+            {% if reportes %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Identificación</th>
+                            <th>Fecha</th>
+                            <th>Cliente / Máquina</th>
+                            <th>Hallazgo Técnico</th>
+                            <th>Técnico</th>
+                            <th class="text-center">Adjuntos</th>
+                            <th class="text-center pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reporte in reportes %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="badge-codigo">{{ reporte.numero_reporte }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold text-dark">{{ reporte.fecha_asistencia|date:"d/m/Y" }}</span>
+                                    <small class="text-muted" style="font-size: 0.7rem;">
+                                        <i class="bi bi-clock me-1"></i>{{ reporte.fecha_generacion|date:"d/m/y" }}
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ reporte.empresa.nombre }}</div>
+                                <div class="text-muted small">
+                                    <i class="bi bi-cpu-fill me-1" style="color: var(--color-burdeo);"></i>{{ reporte.maquina }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-diagnostico" title="{{ reporte.problema_encontrado }}">
+                                    <strong style="color: var(--color-burdeo);">Real:</strong> {{ reporte.problema_encontrado|default:"Sin diagnóstico" }}
+                                </span>
+                                <small class="text-muted text-diagnostico">
+                                    <strong>Rep:</strong> {{ reporte.problema|truncatechars:40 }}
+                                </small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar d-flex align-items-center justify-content-center me-2" style="background: linear-gradient(135deg, var(--color-burdeo-soft), #fce4e9); color: var(--color-burdeo);">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                    <small class="fw-medium">{{ reporte.usuario.get_full_name|default:reporte.usuario.username }}</small>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                {% if reporte.archivos.count > 0 %}
+                                <span class="badge-attachments">
+                                    <i class="bi bi-paperclip me-1"></i>{{ reporte.archivos.count }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center pe-4">
+                                <div class="btn-group">
+                                    <a href="{% url 'clientes:detalle_reporte' reporte.pk %}" 
+                                       class="btn btn-sm btn-action" 
+                                       title="Ver Detalle">
+                                        <i class="bi bi-eye-fill text-primary"></i>
+                                    </a>
+                                    <a href="{% url 'clientes:editar_reporte' reporte.pk %}" 
+                                       class="btn btn-sm btn-action" 
+                                       title="Editar">
+                                        <i class="bi bi-pencil-fill text-warning"></i>
+                                    </a>
+                                    <a href="{% url 'clientes:reporte_pdf' reporte.pk %}" 
+                                       class="btn btn-sm btn-action" 
+                                       target="_blank"
+                                       title="Descargar PDF">
+                                        <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if reportes.has_other_pages %}
+            <div class="card-footer bg-white border-0 py-4">
+                <nav aria-label="Paginación">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if reportes.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ reportes.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if empresa_id %}&empresa={{ empresa_id }}{% endif %}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="page-item disabled">
+                            <span class="page-link fw-bold" style="color: var(--color-burdeo);">
+                                {{ reportes.number }} / {{ reportes.paginator.num_pages }}
+                            </span>
+                        </li>
+                        
+                        {% if reportes.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ reportes.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if empresa_id %}&empresa={{ empresa_id }}{% endif %}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-clipboard2-x"></i>
+                <h4 class="text-muted fw-bold">No se encontraron reportes</h4>
+                <p class="text-muted">Intenta ajustar los filtros o crea uno nuevo</p>
+                <a href="{% url 'clientes:crear_reporte' %}" class="btn btn-burdeo mt-3">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Crear Primer Reporte
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

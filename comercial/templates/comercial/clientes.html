@@ -1,0 +1,82 @@
+{% extends "control_horas/base.html" %}
+
+{% block title %}Módulo Comercial{% endblock %}
+{# ======================================================= #}
+{# IMPLEMENTACIÓN DEL BREADCRUMB #}
+{# Inicio > Comercial #}
+{# ======================================================= #}
+{% block horizontal_breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-4">
+        {# Nivel 1: Inicio #}
+        <li class="breadcrumb-item"><a href="{% url 'control_horas:main_dashboard' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'comercial:dashboard' %}">Comercial</a></li>
+        {# Nivel 2: Página Actual (Activa) #}
+        <li class="breadcrumb-item active" aria-current="page">Clientes</li>
+    </ol>
+</nav>
+{% endblock horizontal_breadcrumbs %}
+{% block page_title %}{% endblock page_title %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+
+        <h1 class="text-center mb-5 text-primary display-4 fw-bold">
+            <i class="bi bi-graph-up me-3"></i> Comercial
+        </h1>
+        <p class="text-center lead text-muted mb-5">Gestión de ventas, clientes y análisis de mercado.</p>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 text-center justify-content-center">
+
+            {# Botón 1: Gestión de Clientes (CRM) #}
+            <div class="col">
+                <a href="{% url 'comercial:clientes' %}" class="text-decoration-none">
+                    <div class="card card-hover shadow-lg h-100 border-start border-5 border-success">
+                        <div class="card-body p-4">
+                            <i class="bi bi-person-vcard text-success display-3 mb-3"></i>
+                            <h5 class="card-title fw-bold text-dark">Gestión de Clientes (CRM)</h5>
+                            <p class="card-text text-muted small">Base de datos, historial y seguimiento de leads.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            {# Botón 2: Reportes y Métricas #}
+            <div class="col">
+                <a href="{% url 'comercial:reportes' %}" class="text-decoration-none">
+                    <div class="card card-hover shadow-lg h-100 border-start border-5 border-primary">
+                        <div class="card-body p-4">
+                            <i class="bi bi-bar-chart-line text-primary display-3 mb-3"></i>
+                            <h5 class="card-title fw-bold text-dark">Reportes de Venta</h5>
+                            <p class="card-text text-muted small">Análisis de KPIs, tendencias y desempeño.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            
+            {# Botón 3: Emisión de Facturas/Pedidos #}
+            <div class="col">
+                <a href="{% url 'comercial:pedidos' %}" class="text-decoration-none">
+                    <div class="card card-hover shadow-lg h-100 border-start border-5 border-info">
+                        <div class="card-body p-4">
+                            <i class="bi bi-file-earmark-text text-info display-3 mb-3"></i>
+                            <h5 class="card-title fw-bold text-dark">Pedidos y Facturación</h5>
+                            <p class="card-text text-muted small">Creación y seguimiento de órdenes de compra/venta.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-hover:hover {
+        transform: translateY(-5px);
+        transition: transform 0.3s ease-in-out;
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important; 
+        border-color: #6a001a !important;
+    }
+</style>
+{% endblock %}

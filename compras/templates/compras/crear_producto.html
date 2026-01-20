@@ -1,0 +1,239 @@
+{% extends "control_horas/base.html" %}
+
+{% load static %}
+
+{% block title %}Crear Nuevo Producto | Inventario S&M{% endblock %}
+{% block horizontal_breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'control_horas:main_dashboard' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'compras:compras_dashboard' %}">Compras</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'compras:deposito_dashboard' %}">Deposito</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'compras:ingreso_stock' %}">Ingreso</a></li>
+
+        <li class="breadcrumb-item active" aria-current="page">Nuevo Producto</li>
+    </ol>
+</nav>
+{% endblock horizontal_breadcrumbs %}
+{% block extra_head %}
+    {{ block.super }}
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+/* ==================================================================
+Estilos Base y Paleta de Colores
+================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+:root {
+    /* Paleta de colores consistente */
+    --burgundy-main: #7D1935; 
+    --burgundy-hover: #5A1327;
+    --burgundy-light-accent: #B44A68;
+    --soft-gray-bg: #f5f7fa; 
+    --text-dark: #1f2937; 
+    --section-divider: #7D1935; /* Gris claro para los separadores */
+}
+
+/* Clases de Tailwind Personalizadas */
+.shadow-elevated { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+.bg-burgundy-main { background-color: var(--burgundy-main); }
+.hover\:bg-burgundy-hover:hover { background-color: var(--burgundy-hover); }
+.focus-burgundy:focus { 
+    border-color: var(--burgundy-light-accent) !important; 
+    box-shadow: 0 0 0 3px rgba(180, 74, 104, 0.4) !important; /* B44A68 con opacidad */
+}
+.text-burgundy-main { color: var(--burgundy-main); }
+
+/* Estilo para Títulos de Sección UNIFICADO */
+.section-title {
+    font-size: 1.5rem; 
+    font-weight: 800;
+    color: var(--text-dark);
+    border-bottom: 2px solid var(--section-divider); 
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+.section-title i {
+    margin-right: 0.75rem;
+    color: var(--burgundy-main);
+}
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="py-8 antialiased bg-[var(--soft-gray-bg)]">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {# --- CABECERA MEJORADA: TÍTULO Y DESCRIPCIÓN --- #}
+        <header class="mb-8 pb-4 border-b-4 border-burgundy-main">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-text-dark flex items-center">
+                <i class="bi bi-box-fill mr-3 text-burgundy-main text-4xl"></i>
+                Crear Nuevo Producto
+            </h1>
+            <p class="mt-2 text-gray-600 text-lg font-medium">
+                Complete la información esencial para registrar un nuevo artículo en el sistema de inventario.
+            </p>
+            {# EL BOTÓN 'VOLVER A INGRESO DE STOCK' SE ELIMINÓ DE AQUÍ #}
+        </header>
+
+        {# --- MENSAJES DE DJANGO --- #}
+        {% if messages %}
+            <div class="mb-6">
+                {% for message in messages %}
+                    <div class="p-4 rounded-xl border {% if message.tags == 'error' %}bg-red-50 border-red-200 text-red-700{% elif message.tags == 'success' %}bg-green-50 border-green-200 text-green-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %} shadow-sm">
+                        <i class="bi {% if message.tags == 'error' %}bi-x-octagon-fill{% elif message.tags == 'success' %}bi-check-circle-fill{% else %}bi-info-circle-fill{% endif %} mr-2"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {# --- FORMULARIO PRINCIPAL --- #}
+        <form method="POST" action="{% url 'compras:crear_producto' %}" 
+              class="bg-white p-6 sm:p-8 rounded-2xl shadow-elevated ring-1 ring-gray-100">
+            {% csrf_token %}
+
+            {# ======================================================= #}
+            {# 1. SECCIÓN: IDENTIFICACIÓN DEL PRODUCTO #}
+            {# ======================================================= #}
+            <div class="mb-8">
+                <h2 class="section-title">
+                    <i class="bi bi-tag-fill"></i> 1. Datos Esenciales
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    {# Código de Producto (Generado) #}
+                    <div>
+                        <label for="codigo_producto" class="block text-sm font-semibold text-gray-700">
+                            <i class="bi bi-key-fill mr-1 text-burgundy-main"></i> Código de Producto (Generado)
+                        </label>
+                        <input type="text" id="codigo_producto" name="codigo_producto" required
+                                value="{{ next_code|default:'' }}"
+                                readonly 
+                                class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm py-2.5 px-3 text-lg font-bold bg-gray-100 text-gray-600 cursor-not-allowed">
+                        <small class="text-gray-500">Código interno asignado automáticamente.</small>
+                    </div>
+
+                    {# Nombre del Producto #}
+                    <div>
+                        <label for="producto_nombre" class="block text-sm font-semibold text-gray-700">
+                            <i class="bi bi-card-text mr-1 text-burgundy-main"></i> Nombre del Producto <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="producto_nombre" name="producto_nombre" required maxlength="100"
+                                placeholder="Ej: Disco SSD Kingston 1TB"
+                                value="{{ producto_nombre|default:'' }}"
+                                class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm py-2.5 px-3 focus-burgundy text-gray-900">
+                    </div>
+
+                    {# Marca #}
+                    <div>
+                        <label for="marca" class="block text-sm font-semibold text-gray-700">
+                            <i class="bi bi-r-circle-fill mr-1 text-burgundy-main"></i> Marca
+                        </label>
+                        <input type="text" id="marca" name="marca" maxlength="50"
+                                placeholder="Ej: Kingston, Cisco"
+                                value="{{ marca|default:'' }}"
+                                class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm py-2.5 px-3 focus-burgundy text-gray-900">
+                    </div>
+                    
+                    {# Unidad / Modelo #}
+                    <div>
+                        <label for="modelo" class="block text-sm font-semibold text-gray-700">
+                            <i class="bi bi-rulers mr-1 text-burgundy-main"></i> Unidad de Medida <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="modelo" name="modelo" required maxlength="50"
+                                placeholder="Ej: Unidad, Pieza, Mts, Paquete"
+                                value="{{ modelo|default:'' }}"
+                                class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm py-2.5 px-3 focus-burgundy text-gray-900">
+                    </div>
+                </div>
+            </div>
+
+            {# ======================================================= #}
+            {# 2. SECCIÓN: LOGÍSTICA E INVENTARIO #}
+            {# ======================================================= #}
+            <div class="mb-8">
+                <h2 class="section-title">
+                    <i class="bi bi-box-seam-fill"></i> 2. Control de Stock
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    {# Ubicación en Depósito #}
+                    <div class="col-span-1">
+                        <label for="ubicacion" class="block text-sm font-semibold text-gray-700">
+                            <i class="bi bi-geo-alt-fill mr-1 text-burgundy-main"></i> Ubicación <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="ubicacion" name="ubicacion" required maxlength="50"
+                                placeholder="Ej: A-01, Estante 5"
+                                value="{{ ubicacion|default:'' }}"
+                                class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm py-2.5 px-3 focus-burgundy text-gray-900">
+                    </div>
+                    
+                    {# Stock Mínimo #}
+                    <div class="col-span-1">
+                        <label for="minimo_admisible" class="block text-sm font-semibold text-gray-700">
+                            <i class="bi bi-dash-circle-fill mr-1 text-burgundy-main"></i> Stock Mínimo
+                        </label>
+                        <input type="number" id="minimo_admisible" name="minimo_admisible" min="0" value="{{ minimo_admisible|default:0 }}"
+                                class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm py-2.5 px-3 focus-burgundy text-gray-900">
+                    </div>
+
+                    {# Stock Máximo #}
+                    <div class="col-span-1">
+                        <label for="maximo_admisible" class="block text-sm font-semibold text-gray-700">
+                            <i class="bi bi-plus-circle-fill mr-1 text-burgundy-main"></i> Stock Máximo
+                        </label>
+                        <input type="number" id="maximo_admisible" name="maximo_admisible" min="0" value="{{ maximo_admisible|default:0 }}"
+                                class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm py-2.5 px-3 focus-burgundy text-gray-900">
+                    </div>
+                </div>
+            </div>
+
+            {# ======================================================= #}
+            {# 3. SECCIÓN: DESCRIPCIÓN #}
+            {# ======================================================= #}
+            <div class="mb-8">
+                <h2 class="section-title">
+                    <i class="bi bi-info-circle-fill"></i> 3. Descripción
+                </h2>
+
+                {# Descripción Detallada (Full Width) #}
+                <div>
+                    <label for="descripcion" class="block text-sm font-semibold text-gray-700">
+                        <i class="bi bi-file-earmark-text-fill mr-1 text-burgundy-main"></i> Descripción Detallada <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="descripcion" name="descripcion" rows="4" required maxlength="500"
+                                placeholder="Especificaciones técnicas, usos comunes, proveedor, etc. Sea lo más detallado posible."
+                                class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm py-2.5 px-3 focus-burgundy text-gray-900 resize-none">{{ descripcion|default:'' }}</textarea>
+                </div>
+            </div>
+
+            {# ======================================================= #}
+            {# 4. SECCIÓN: BOTONES DE ACCIÓN #}
+            {# ======================================================= #}
+            <div class="pt-6 mt-6 border-t border-gray-200 flex justify-end gap-3">
+                
+                {# BOTÓN CANCELAR (Único botón de Volver) #}
+                <a href="{% url 'compras:ingreso_stock' %}" 
+                   class="inline-flex items-center rounded-xl border border-gray-300 bg-white px-6 py-3 text-base font-bold text-gray-700 shadow-sm hover:bg-gray-100 transition duration-150">
+                    <i class="bi bi-x-circle-fill mr-2"></i> Cancelar / Volver
+                </a>
+                
+                {# BOTÓN GUARDAR (SUBMIT) #}
+                <button type="submit" 
+                        class="inline-flex justify-center items-center rounded-xl border border-transparent bg-burgundy-main px-6 py-3 text-base font-bold text-white shadow-md hover:bg-burgundy-hover transition duration-300 focus:outline-none focus:ring-4 focus:ring-burgundy-main/50">
+                    <i class="bi bi-box-seam-fill mr-2"></i> 
+                    Guardar Producto
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}

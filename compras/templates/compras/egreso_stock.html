@@ -1,0 +1,758 @@
+{% extends "control_horas/base.html" %}
+{% load static %}
+
+{% block title %}Registrar Egreso de Stock | S&M Automation{% endblock %}
+
+{% block horizontal_breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'control_horas:main_dashboard' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'compras:compras_dashboard' %}">Compras</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'compras:deposito_dashboard' %}">Deposito</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Egreso</li>
+    </ol>
+</nav>
+{% endblock horizontal_breadcrumbs %}
+
+{% block extra_head %}
+    {{ block.super }}
+    
+    link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+    {# QUAGGA JS - Versión específica que funciona bien #}
+    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js"></script>
+    
+    <style>
+        /* ========================================= */
+        /* ESTILOS UNIFICADOS - EGRESO CON SCANNER */
+        /* ========================================= */
+        
+        :root {
+            --burgundy-main: #800020;
+            --burgundy-hover: #6a001a;
+            --soft-gray-bg: #f5f7fa;
+            --text-dark: #1f2937;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--soft-gray-bg);
+        }
+
+        /* --- TÍTULO PRINCIPAL --- */
+        .page-main-title {
+            color: #1f2937;
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .page-main-title i {
+            color: var(--burgundy-main);
+        }
+
+        .page-subtitle {
+            color: #6b7280;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        /* --- CARDS UNIFICADAS --- */
+        .unified-card {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--burgundy-main);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* --- SCANNER CONTAINER --- */
+        .scanner-container {
+            background-color: #000000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+            position: relative;
+            border: 3px solid var(--burgundy-main);
+        }
+
+        #scanner-viewport {
+            width: 100%;
+            max-width: 640px;
+            height: 400px;
+            margin: 0 auto;
+            position: relative;
+            background: #000;
+        }
+
+        #scanner-viewport canvas,
+        #scanner-viewport video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .scanner-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 60%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .scanner-overlay::before,
+        .scanner-overlay::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #00ff00;
+        }
+
+        .scanner-overlay::before {
+            top: -3px;
+            left: -3px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .scanner-overlay::after {
+            bottom: -3px;
+            right: -3px;
+            border-left: none;
+            border-top: none;
+        }
+
+        /* --- FORMULARIOS --- */
+        .form-label {
+            color: #1f2937;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-control {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 0.75rem;
+            width: 100%;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--burgundy-main);
+            box-shadow: 0 0 0 0.2rem rgba(128, 0, 32, 0.15);
+            outline: none;
+        }
+
+        /* --- BOTONES --- */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--burgundy-main);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--burgundy-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(128, 0, 32, 0.2);
+        }
+
+        .btn-secondary {
+            background-color: #6b7280;
+            color: #ffffff;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+
+        .btn-success {
+            background-color: #0f5132;
+            color: #ffffff;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: #ffffff;
+        }
+
+        .btn-danger:hover {
+            background-color: #bb2d3b;
+        }
+
+        /* --- DETALLES DEL PRODUCTO --- */
+        .product-details {
+            background-color: #fee2e2;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .product-details-header {
+            background-color: #dc3545;
+            color: #ffffff;
+            padding: 0.75rem 1rem;
+            border-radius: 6px 6px 0 0;
+            margin: -1.5rem -1.5rem 1rem -1.5rem;
+            font-weight: 600;
+        }
+
+        .detail-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-item label {
+            display: block;
+            color: #6b7280;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-item span {
+            display: block;
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        /* --- ALERTAS --- */
+        .alert {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #0f5132;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #dc3545;
+        }
+
+        .alert-info {
+            background-color: #cfe2ff;
+            color: #084298;
+            border: 1px solid #0dcaf0;
+        }
+
+        /* --- AUTOCOMPLETE --- */
+        .ui-autocomplete {
+            max-height: 250px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .ui-menu-item.ui-state-focus {
+            background-color: #f0f4f7 !important;
+            border: none !important;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .page-main-title {
+                font-size: 1.5rem;
+            }
+
+            .unified-card {
+                padding: 1.5rem;
+            }
+
+            #scanner-viewport {
+                height: 300px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; margin: 0 auto; padding: 2rem 1rem;">
+    
+    {# TÍTULO #}
+    <h1 class="page-main-title">
+        <i class="bi bi-box-arrow-up-right"></i>
+        Registrar Egreso de Stock
+    </h1>
+    <p class="page-subtitle">
+        Utilice el lector de código de barras o búsqueda manual para registrar la salida de productos.
+    </p>
+
+    {# BOTÓN VOLVER #}
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{% url 'compras:deposito_dashboard' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Volver al Depósito
+        </a>
+    </div>
+
+    {# CARD DEL SCANNER #}
+    <div class="unified-card">
+        <div class="section-title">
+            <i class="bi bi-camera-video"></i>
+            Lector de Códigos de Barras
+        </div>
+
+        {# CONTROLES DEL SCANNER #}
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+            <button type="button" id="start-scanner" class="btn btn-primary">
+                <i class="bi bi-play-fill"></i> Iniciar Cámara
+            </button>
+            <button type="button" id="stop-scanner" class="btn btn-danger" style="display: none;">
+                <i class="bi bi-stop-fill"></i> Detener Cámara
+            </button>
+            <select id="camera-select" class="form-control" style="max-width: 300px; display: none;">
+                <option value="">Seleccionar cámara...</option>
+            </select>
+        </div>
+
+        {# MENSAJES DE ESTADO #}
+        <div id="scanner-status"></div>
+
+        {# VIEWPORT DEL SCANNER #}
+        <div id="scanner-viewport" style="display: none;">
+            <div class="scanner-overlay"></div>
+        </div>
+    </div>
+
+    {# FORMULARIO #}
+    <form method="post" action="{% url 'compras:egreso_stock' %}" id="egreso-form">
+        {% csrf_token %}
+        <input type="hidden" name="codigo_producto" id="codigo_producto" value="{{ codigo_producto|default:'' }}">
+
+        {# CARD DE BÚSQUEDA #}
+        <div class="unified-card">
+            <div class="section-title">
+                <i class="bi bi-search"></i>
+                Búsqueda de Producto
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                <div>
+                    <label for="buscar_producto" class="form-label">
+                        Buscar por Código o Nombre <span style="color: #dc3545;">*</span>
+                    </label>
+                    <input type="text" 
+                           id="buscar_producto" 
+                           name="buscar_producto" 
+                           class="form-control"
+                           placeholder="Escribir para buscar..."
+                           autocomplete="off"
+                           required
+                           value="{{ buscar_producto|default:'' }}">
+                    <small style="color: #6b7280;">Mínimo 3 caracteres</small>
+                </div>
+
+                <div>
+                    <label for="cantidad" class="form-label">
+                        Cantidad a Egresar <span style="color: #dc3545;">*</span>
+                    </label>
+                    <input type="number" 
+                           step="any" 
+                           min="0.01"
+                           id="cantidad" 
+                           name="cantidad" 
+                           class="form-control"
+                           placeholder="1"
+                           required
+                           value="{{ cantidad|default:'1' }}"
+                           style="font-size: 1.25rem; font-weight: 600; text-align: center;">
+                </div>
+            </div>
+
+            {# DETALLES DEL PRODUCTO #}
+            <div id="product-details" style="display: none;" class="product-details">
+                <div class="product-details-header">
+                    <i class="bi bi-info-circle"></i> Detalles del Producto
+                </div>
+                <div class="detail-row">
+                    <div class="detail-item">
+                        <label>SKU/Código:</label>
+                        <span id="detail-sku" style="font-family: monospace; color: var(--burgundy-main);"></span>
+                    </div>
+                    <div class="detail-item" style="grid-column: span 2;">
+                        <label>Nombre:</label>
+                        <span id="detail-nombre"></span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Stock Actual:</label>
+                        <span id="detail-stock" style="font-size: 1.5rem; color: #dc3545;"></span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-item">
+                        <label>Marca:</label>
+                        <span id="detail-marca"></span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Modelo:</label>
+                        <span id="detail-modelo"></span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Ubicación:</label>
+                        <span id="detail-ubicacion" style="color: var(--burgundy-main);"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# CARD DE DATOS ADICIONALES #}
+        <div class="unified-card">
+            <div class="section-title">
+                <i class="bi bi-file-text"></i>
+                Información Adicional
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label for="referencia" class="form-label">
+                    Referencia (Factura / Orden)
+                </label>
+                <input type="text" 
+                       id="referencia" 
+                       name="referencia" 
+                       class="form-control"
+                       placeholder="Ej: Factura A01-001-0012345"
+                       maxlength="100"
+                       value="{{ referencia|default:'' }}">
+            </div>
+
+            <div>
+                <label for="observacion" class="form-label">
+                    Motivo / Observación <span style="color: #dc3545;">*</span>
+                </label>
+                <textarea id="observacion" 
+                          name="observacion" 
+                          class="form-control"
+                          rows="3"
+                          placeholder="Detalle el motivo de la salida..."
+                          required>{{ observacion|default:'' }}</textarea>
+            </div>
+        </div>
+
+        {# BOTÓN SUBMIT #}
+        <div style="text-align: right;">
+            <button type="submit" class="btn btn-danger" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                <i class="bi bi-box-arrow-up-right"></i> Confirmar Egreso
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+$(document).ready(function() {
+    const AUTOCOMPLETE_URL = "{% url 'compras:search_products_ajax' %}";
+    const DETAILS_URL = "{% url 'compras:get_product_details_ajax' %}";
+    
+    const searchInput = $("#buscar_producto");
+    const codigoInput = $("#codigo_producto");
+    const productDetails = $("#product-details");
+    const scannerStatus = $("#scanner-status");
+    const scannerViewport = $("#scanner-viewport");
+    const startBtn = $("#start-scanner");
+    const stopBtn = $("#stop-scanner");
+    const cameraSelect = $("#camera-select");
+    
+    let scannerRunning = false;
+    let lastScannedCode = null;
+    let lastScanTime = 0;
+
+    // ==========================================
+    // FUNCIONES DE PRODUCTOS
+    // ==========================================
+    
+    function loadProductDetails(codigo) {
+        if (!codigo) {
+            productDetails.hide();
+            codigoInput.val('');
+            return;
+        }
+
+        $.ajax({
+            url: DETAILS_URL,
+            data: { 'codigo': codigo },
+            dataType: 'json',
+            success: function(data) {
+                if (data.exists) {
+                    $("#detail-sku").text(data.codigo);
+                    $("#detail-nombre").text(data.nombre);
+                    $("#detail-marca").text(data.marca || 'N/A');
+                    $("#detail-modelo").text(data.modelo || data.unidad || 'N/A');
+                    $("#detail-ubicacion").text(data.ubicacion || 'Sin asignar');
+                    $("#detail-stock").text(parseFloat(data.stock_actual).toLocaleString('es-PY'));
+                    
+                    codigoInput.val(data.codigo);
+                    searchInput.val(`${data.codigo} - ${data.nombre}`);
+                    
+                    productDetails.slideDown(300);
+                    showStatus(`✔️ Producto cargado: ${data.codigo}`, 'success');
+                    $("#cantidad").focus();
+                } else {
+                    codigoInput.val('');
+                    productDetails.hide();
+                    showStatus(`❌ Código ${codigo} no encontrado`, 'danger');
+                }
+            },
+            error: function() {
+                showStatus('❌ Error al cargar los detalles del producto', 'danger');
+            }
+        });
+    }
+
+    function showStatus(message, type = 'info') {
+        const alertClass = `alert alert-${type}`;
+        scannerStatus.html(`<div class="${alertClass}">${message}</div>`);
+        setTimeout(() => {
+            if (type !== 'danger') {
+                scannerStatus.fadeOut(300, function() {
+                    $(this).html('').show();
+                });
+            }
+        }, 5000);
+    }
+
+    // ==========================================
+    // AUTOCOMPLETE
+    // ==========================================
+    
+    searchInput.autocomplete({
+        source: function(request, response) {
+            $.ajax({
+                url: AUTOCOMPLETE_URL,
+                dataType: "json",
+                data: { q: request.term },
+                success: function(data) { response(data); },
+                error: function() { response([]); }
+            });
+        },
+        minLength: 3,
+        select: function(event, ui) {
+            loadProductDetails(ui.item.codigo);
+            return false;
+        },
+        _renderItem: function(ul, item) {
+            let display = `
+                <div style="padding: 0.5rem;">
+                    <strong style="color: var(--burgundy-main); font-family: monospace;">${item.codigo}</strong><br>
+                    <span style="font-size: 0.9rem;">${item.nombre}</span><br>
+                    <small style="color: #6b7280;">Stock: ${item.stock} | ${item.unidad}</small>
+                </div>
+            `;
+            return $("<li>").append($("<div>").html(display)).appendTo(ul);
+        }
+    });
+
+    // ==========================================
+    // SCANNER DE CÓDIGO DE BARRAS
+    // ==========================================
+    
+    async function listCameras() {
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            
+            cameraSelect.empty();
+            videoDevices.forEach((device, index) => {
+                const label = device.label || `Cámara ${index + 1}`;
+                const option = $('<option>').val(device.deviceId).text(label);
+                
+                // Seleccionar automáticamente la C920 si está disponible
+                if (label.toLowerCase().includes('c920') || label.toLowerCase().includes('logitech')) {
+                    option.prop('selected', true);
+                }
+                
+                cameraSelect.append(option);
+            });
+            
+            if (videoDevices.length > 1) {
+                cameraSelect.show();
+            }
+            
+            return videoDevices;
+        } catch (error) {
+            console.error('Error al enumerar cámaras:', error);
+            showStatus('❌ No se pudieron listar las cámaras', 'danger');
+            return [];
+        }
+    }
+
+    async function startScanner() {
+        if (scannerRunning) return;
+        
+        try {
+            const cameras = await listCameras();
+            
+            if (cameras.length === 0) {
+                showStatus('❌ No se encontraron cámaras', 'danger');
+                return;
+            }
+            
+            const selectedCamera = cameraSelect.val() || cameras[0].deviceId;
+            
+            scannerViewport.show();
+            startBtn.hide();
+            stopBtn.show();
+            showStatus('🎥 Iniciando cámara...', 'info');
+            
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector('#scanner-viewport'),
+                    constraints: {
+                        width: 640,
+                        height: 480,
+                        deviceId: selectedCamera,
+                        facingMode: "environment"
+                    }
+                },
+                decoder: {
+                    readers: [
+                        "code_128_reader",
+                        "ean_reader",
+                        "ean_8_reader",
+                        "code_39_reader",
+                        "code_39_vin_reader",
+                        "codabar_reader",
+                        "upc_reader",
+                        "upc_e_reader"
+                    ]
+                },
+                locate: true,
+                locator: {
+                    patchSize: "medium",
+                    halfSample: true
+                },
+                frequency: 10
+            }, function(err) {
+                if (err) {
+                    console.error('Error al inicializar Quagga:', err);
+                    showStatus(`❌ Error: ${err.message || 'No se pudo iniciar la cámara'}`, 'danger');
+                    stopScanner();
+                    return;
+                }
+                
+                Quagga.start();
+                scannerRunning = true;
+                showStatus('✅ Cámara activa - Enfoque el código de barras', 'success');
+            });
+            
+        } catch (error) {
+            console.error('Error al iniciar el scanner:', error);
+            showStatus('❌ Error al acceder a la cámara', 'danger');
+            stopScanner();
+        }
+    }
+
+    function stopScanner() {
+        if (!scannerRunning) return;
+        
+        Quagga.stop();
+        scannerViewport.hide();
+        startBtn.show();
+        stopBtn.hide();
+        scannerRunning = false;
+        lastScannedCode = null;
+        showStatus('⏸️ Cámara detenida', 'info');
+    }
+
+    // Evento de detección de código
+    Quagga.onDetected(function(result) {
+        const code = result.codeResult.code;
+        const now = Date.now();
+        
+        // Evitar lecturas duplicadas (debounce de 2 segundos)
+        if (code === lastScannedCode && (now - lastScanTime) < 2000) {
+            return;
+        }
+        
+        lastScannedCode = code;
+        lastScanTime = now;
+        
+        console.log('Código detectado:', code);
+        loadProductDetails(code);
+        
+        // Opcional: detener el scanner automáticamente
+        // stopScanner();
+    });
+
+    // ==========================================
+    // EVENT LISTENERS
+    // ==========================================
+    
+    startBtn.on('click', startScanner);
+    stopBtn.on('click', stopScanner);
+    
+    cameraSelect.on('change', function() {
+        if (scannerRunning) {
+            stopScanner();
+            setTimeout(startScanner, 500);
+        }
+    });
+
+    searchInput.on('keyup change', function() {
+        if ($(this).val().length === 0) {
+            codigoInput.val('');
+            productDetails.hide();
+        }
+    });
+
+    // Cargar detalles iniciales si hay código
+    const initialCode = codigoInput.val();
+    if (initialCode) {
+        loadProductDetails(initialCode);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,690 @@
+{% extends "control_horas/base.html" %} 
+{% load static %}
+
+{% block title %}Calendario de Registros{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+
+    <style>
+        /* ========================================= */
+        /* ESTILOS UNIFICADOS - CALENDARIO DE HORAS */
+        /* ========================================= */
+        
+        /* --- AJUSTES GLOBALES PARA ALINEAR A LOS COSTADOS DE LA BASE --- */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+        
+        /* FUERZA EL ANCHO COMPLETO Y ANULA POSIBLES MÁRGENES DE LA PLANTILLA BASE */
+        .calendario-wrapper {
+            width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        /* --- CONFIGURACIÓN DE COLORES UNIFICADOS (BORGOÑA) --- */
+        :root {
+            /* Forzar Borgoña para Bootstrap y colores primarios */
+            --bs-primary: #800020 !important; 
+            --bs-primary-rgb: 128, 0, 32 !important; 
+            
+            /* Ajuste de colores de FullCalendar */
+            --fc-button-bg-color: #800020; 
+            --fc-button-hover-bg-color: #6a001a; 
+            --fc-button-active-bg-color: #6a001a;
+            --fc-button-border-color: #800020;
+            --fc-event-text-color: #1f2937; 
+            --fc-border-color: #e5e7eb;
+        }
+
+        /* --- AJUSTES GENERALES DEL CALENDARIO --- */
+        .fc { 
+            width: 100% !important; 
+            max-width: none !important; 
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .fc-daygrid-event { 
+            border-radius: 6px; 
+            margin-bottom: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08); 
+            border-color: transparent !important; 
+            height: auto !important; 
+        }
+
+        /* VISUALIZACIÓN APILADA (2 LÍNEAS) */
+        .fc-event-main { 
+            font-size: 0.8rem; 
+            padding: 4px 6px;
+            color: var(--fc-event-text-color) !important; 
+            font-weight: 500; 
+            text-align: left;
+            display: flex; 
+            flex-direction: column; 
+            line-height: 1.3; 
+        }
+        
+        /* Contenedor de Nombre: Línea 1 */
+        .fc-event-main .name-details {
+            display: flex;
+            align-items: center;
+            width: 100%; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
+        
+        /* Contenedor de Tiempos y Saldo: Línea 2 */
+        .fc-event-main .time-details {
+            display: flex;
+            justify-content: space-between; 
+            width: 100%;
+            margin-top: 2px; 
+            font-size: 0.75rem; 
+        }
+        
+        .fc-event-main .time-range,
+        .fc-event-main .saldo-diario {
+            white-space: nowrap; 
+            flex-shrink: 0;
+        }
+
+        /* --- ESTILOS DE BOTONES DE FULLCALENDAR --- */
+        .fc .fc-button-primary {
+            background-color: #800020 !important; 
+            border-color: #800020 !important;
+            color: white !important;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .fc .fc-button-primary:hover {
+            background-color: #6a001a !important; 
+            border-color: #6a001a !important;
+            transform: translateY(-1px);
+        }
+        
+        .fc .fc-button-primary:disabled {
+            opacity: 0.5;
+        }
+
+        /* --- ESTILOS DE COLORES DE EVENTOS --- */
+        .fc-event-jornada-detalle {
+            background-color: #d1e7dd !important; 
+            border-left: 4px solid #0f5132 !important; 
+        }
+        
+        .fc-event-jornada-verificar {
+            background-color: #fff3cd !important; 
+            border-left: 4px solid #ffc107 !important; 
+            font-weight: bold;
+        }
+        
+        .fc-event-dia-libre {
+            background-color: #f8f8f8 !important; 
+            border-left: 4px solid #6b7280 !important; 
+            color: #495057 !important; 
+        }
+
+        /* --- TÍTULO PRINCIPAL UNIFICADO --- */
+        .page-main-title {
+            color: #1f2937;
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .page-main-title i {
+            color: #800020;
+        }
+
+        /* --- CARDS UNIFICADAS --- */
+        .unified-card {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
+        }
+
+        .unified-card-header {
+            background-color: #800020;
+            color: #ffffff;
+            padding: 0.75rem 1rem;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .unified-card-header i {
+            margin-right: 0.5rem;
+        }
+
+        .unified-card-body {
+            padding: 1rem 1.25rem;
+        }
+
+        /* Border accent para cards especiales */
+        .card-accent-primary {
+            border-left: 4px solid #800020;
+        }
+
+        .card-accent-info {
+            border-left: 4px solid #6b7280;
+        }
+
+        /* --- FORMULARIOS UNIFICADOS --- */
+        .form-label {
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.375rem;
+        }
+
+        .form-select,
+        .form-control {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .form-select:focus,
+        .form-control:focus {
+            border-color: #800020;
+            box-shadow: 0 0 0 0.2rem rgba(128, 0, 32, 0.15);
+        }
+
+        /* --- BOTONES UNIFICADOS --- */
+        .btn-primary {
+            background-color: #800020;
+            border-color: #800020;
+            color: #ffffff;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #6a001a;
+            border-color: #6a001a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(128, 0, 32, 0.2);
+        }
+
+        .btn-secondary {
+            background-color: #6b7280;
+            border-color: #6b7280;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4b5563;
+            border-color: #4b5563;
+        }
+
+        /* --- BADGES UNIFICADOS --- */
+        .badge {
+            font-weight: 600;
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+        }
+
+        /* --- MODAL UNIFICADO --- */
+        .modal-header {
+            background-color: #800020;
+            color: #ffffff;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .modal-body {
+            background-color: #ffffff;
+            color: #1f2937;
+        }
+
+        .modal-body dt {
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .modal-body dd {
+            color: #1f2937;
+            font-size: 0.95rem;
+        }
+
+        /* --- ALERTAS UNIFICADAS --- */
+        .alert {
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+
+        /* --- CALENDARIO CONTENEDOR --- */
+        #calendar {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .page-main-title {
+                font-size: 1.5rem;
+            }
+
+            #calendar {
+                padding: 1rem;
+            }
+
+            .unified-card-body {
+                padding: 0.75rem 1rem;
+            }
+        }
+    </style>
+{% endblock %} 
+
+{% block content %}
+<div class="calendario-wrapper"> 
+    
+    {# TÍTULO PRINCIPAL UNIFICADO #}
+    <h1 class="page-main-title">
+        <i class="bi bi-calendar-check"></i>
+        Registros de Jornadas Diarias
+    </h1>
+
+        {% if is_staff %}
+        
+        {# === CARD DE FILTRO STAFF === #}
+        <div class="unified-card card-accent-primary">
+            <div class="unified-card-header">
+                <i class="bi bi-funnel"></i>Herramientas de Filtrado
+            </div>
+            <div class="unified-card-body">
+                <form id="filtro-form" class="row g-3 align-items-end">
+                    
+                    <div class="col-12 col-md-4">
+                        <label for="empleado-select" class="form-label">Filtrar por Funcionario:</label>
+                        <select id="empleado-select" class="form-select form-select-sm">
+                            <option value="" selected>--- Todos los funcionarios ---</option> 
+                            {% for emp in empleados %}
+                                <option value="{{ emp.user.username }}">{{ emp.user.username|capfirst }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-6 col-md-3">
+                        <label for="fecha-inicio-input" class="form-label">Fecha Inicio:</label>
+                        <input type="date" id="fecha-inicio-input" class="form-control form-control-sm">
+                    </div>
+                    
+                    <div class="col-6 col-md-3">
+                        <label for="fecha-fin-input" class="form-label">Fecha Fin:</label>
+                        <input type="date" id="fecha-fin-input" class="form-control form-control-sm">
+                    </div>
+                    
+                    <div class="col-12 col-md-2 d-grid mt-4 mt-md-0">
+                        <button type="submit" class="btn btn-primary btn-sm" id="aplicar-filtro-btn">
+                            <i class="bi bi-funnel-fill me-1"></i> Aplicar Filtro
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {# === CARD DE LEYENDA === #}
+        <div class="unified-card card-accent-info">
+            <div class="unified-card-body">
+                <h6 class="mb-3 fw-bold text-muted" style="font-size: 0.9rem;">
+                    <i class="bi bi-info-circle-fill me-2" style="color: #6b7280;"></i>Guía Visual
+                </h6>
+                <div class="row row-cols-1 row-cols-md-3 g-3">
+                    <div class="col">
+                        <div class="d-flex align-items-center">
+                            <span class="badge" style="background-color: #d1e7dd; color: #0f5132; border-left: 4px solid #0f5132;">
+                                <i class="bi bi-check-circle-fill me-1"></i> OK
+                            </span>
+                            <span class="ms-2 small text-muted">Jornada completa</span>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="d-flex align-items-center">
+                            <span class="badge" style="background-color: #fff3cd; color: #664d03; border-left: 4px solid #ffc107;">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> ALERTA
+                            </span>
+                            <span class="ms-2 small text-muted">Incompleta/Salida Forzada</span>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="d-flex align-items-center small">
+                            <span class="fw-bold text-success">Saldo (+)</span>
+                            <span class="mx-1">/</span>
+                            <span class="fw-bold text-danger">Saldo (-)</span>
+                            <span class="ms-2 text-muted">Horas extra</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% endif %}
+    
+    {# === CALENDARIO === #}
+    <div id="calendar"></div>
+    
+</div>
+    
+{# === MODAL DE DETALLE === #}
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 8px; overflow: hidden;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalLabel">Detalle del Evento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                
+                <dl class="row mb-3">
+                    <dt class="col-sm-4">Día:</dt>
+                    <dd class="col-sm-8 fw-bold" id="modal-fecha"></dd>
+                    
+                    <dt class="col-sm-4">Funcionario:</dt>
+                    <dd class="col-sm-8 fw-bold" id="modal-empleado" style="color: #800020;"></dd>
+
+                    <dt class="col-sm-4">Concepto:</dt>
+                    <dd class="col-sm-8" id="modal-descripcion" style="color: #6b7280;"></dd>
+                </dl>
+                
+                <div class="unified-card" style="background-color: #f8f8f8; margin-bottom: 0;">
+                    <div class="unified-card-body">
+                        <h6 class="mb-3 fw-bold" style="color: #800020;">
+                            <i class="bi bi-clock-history me-2"></i>Detalles de Tiempo
+                        </h6>
+                        <div id="modal-detalles" class="small"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between" style="background-color: #f8f8f8;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div> 
+{% endblock %} 
+    
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var selectEl = document.getElementById('empleado-select');
+            var fechaInicioInput = document.getElementById('fecha-inicio-input');
+            var fechaFinInput = document.getElementById('fecha-fin-input');
+            var filtroForm = document.getElementById('filtro-form');
+            var calendar;
+
+            var eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+            var modalFooter = document.getElementById('eventModal').querySelector('.modal-footer');
+
+            // Función de ayuda para formatear horas (solo HH:MM)
+            function formatTime(timeStr) {
+                if (timeStr && timeStr.includes(':') && timeStr.lastIndexOf(':') > 2) {
+                    return timeStr.substring(0, timeStr.lastIndexOf(':'));
+                }
+                return timeStr || 'N/A';
+            }
+            
+            // Función para obtener los parámetros de filtro actuales
+            function getCurrentFilters() {
+                return {
+                    empleado: selectEl ? selectEl.value : '',
+                    fecha_inicio: fechaInicioInput ? fechaInicioInput.value : null,
+                    fecha_fin: fechaFinInput ? fechaFinInput.value : null,
+                    tipo: 'horas' 
+                };
+            }
+            
+            // Manejador de Click (Modal)
+            function handleEventClick(info) {
+                var props = info.event.extendedProps;
+                var eventType = props.tipo; 
+                
+                var detallesHTML = '';
+                var modalTitle = '';
+                
+                var existingEditBtn = document.getElementById('modal-edit-btn');
+                if (existingEditBtn) { existingEditBtn.remove(); }
+                
+                if (eventType === 'completo' || eventType === 'incompleto') {
+                    
+                    modalTitle = 'Detalle de la Jornada';
+                    let salidaText = props.salida ? formatTime(props.salida) : 'N/A';
+                    let salidaClass = '';
+                    let descripcionText = 'Registro de jornada';
+                    
+                    if (eventType === 'incompleto') {
+                        salidaText = 'PENDIENTE / CORRECCIÓN'; 
+                        salidaClass = 'text-danger fw-bold';
+                        descripcionText = 'Registro Incompleto (Requiere Corrección)';
+                        
+                        detallesHTML += `<div class="alert alert-warning py-2 px-3 mb-3" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> ${props.mensaje || 'Error: Falta la marca de salida o fue forzada.'}
+                        </div>`;
+                        
+                        if (props.salida && props.salida !== 'N/A') {
+                            salidaText = formatTime(props.salida) + ' *';
+                        }
+                    } 
+                    
+                    detallesHTML += `<p class="mb-2">Entrada: <strong>${formatTime(props.entrada)}</strong> | Salida: <strong class="${salidaClass}">${salidaText}</strong></p>`;
+                    detallesHTML += `<p class="mb-2">Horas Netas: <strong style="color: #800020;">${props.horas_netas || 'N/A'}</strong></p>`; 
+                    
+                    if (eventType === 'completo') {
+                        var saldoColor = props.horas_extras && props.horas_extras.startsWith('-') ? 'text-danger' : 'text-success';
+                        detallesHTML += `<p class="mb-0">Saldo del Día: <strong class="${saldoColor}">${formatTime(props.horas_extras) || '0:00'}</strong></p>`;
+                    } else {
+                        detallesHTML += `<p class="mb-0">Saldo del Día: <strong>N/A</strong></p>`;
+                    }
+                    
+                    document.getElementById('modal-descripcion').innerText = descripcionText;
+
+                    if (info.event.url) { 
+                        var editButton = document.createElement('a');
+                        editButton.href = info.event.url;
+                        editButton.id = 'modal-edit-btn';
+                        editButton.className = 'btn btn-primary me-2';
+                        editButton.innerHTML = '<i class="bi bi-pencil-square me-1"></i> Corregir Registro';
+                        modalFooter.prepend(editButton); 
+                    }
+                    
+                } else if (eventType === 'dia_libre') {
+                    modalTitle = 'Detalle de Solicitud de Día Libre';
+                    
+                    var badgeClass = props.estado === 'APROBADO' ? 'bg-success' : props.estado === 'PENDIENTE' ? 'bg-warning text-dark' : 'bg-secondary';
+                    detallesHTML += `<p class="mb-2">Estado: <span class="badge ${badgeClass}">${props.estado}</span></p>`;
+                    detallesHTML += `<p class="mb-2">Horas Solicitadas: <strong>${props.horas_solicitadas || 'N/A'}</strong></p>`;
+                    detallesHTML += `<p class="mb-0">Motivo: <strong>${props.motivo || 'No especificado'}</strong></p>`;
+                    document.getElementById('modal-descripcion').innerText = 'Solicitud de día libre';
+                }
+
+                document.getElementById('eventModalLabel').innerText = modalTitle;
+                document.getElementById('modal-fecha').innerText = info.event.start.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('modal-empleado').innerText = props.empleado || 'N/A';
+                document.getElementById('modal-detalles').innerHTML = detallesHTML; 
+
+                eventModal.show();
+            }
+
+            // FUNCIÓN DE MONTAJE (Estructura en dos líneas)
+            function handleEventDidMount(info) {
+                const props = info.event.extendedProps;
+                const eventEl = info.el;
+                const mainEl = eventEl.querySelector('.fc-event-main');
+                const eventType = props.tipo;
+                const nombreEmpleado = props.empleado ? props.empleado.charAt(0).toUpperCase() + props.empleado.slice(1) : 'N/A';
+                
+                eventEl.style.cursor = 'pointer';
+                info.el.removeAttribute('href'); 
+                
+                if (eventType === 'completo' || eventType === 'incompleto') { 
+                    
+                    let iconContent; 
+                    let salidaFmt = props.salida ? formatTime(props.salida) : 'N/A';
+                    let salidaClass = ''; 
+                    
+                    if (eventType === 'incompleto') {
+                        eventEl.classList.add('fc-event-jornada-verificar'); 
+                        iconContent = '<i class="bi bi-exclamation-triangle-fill text-danger me-1 fs-5"></i>'; 
+                        salidaFmt = salidaFmt === 'N/A' ? 'PENDIENTE' : salidaFmt + '*'; 
+                        salidaClass = 'text-danger fw-bold';
+                    } 
+                    else if (eventType === 'completo') {
+                        eventEl.classList.add('fc-event-jornada-detalle'); 
+                        iconContent = '<i class="bi bi-check-circle-fill text-success me-1 fs-5"></i>'; 
+                    }
+                    
+                    const entradaFmt = formatTime(props.entrada);
+                    const saldoFmt = props.horas_extras || '0:00:00';
+                    const saldoColorClass = saldoFmt.startsWith('-') ? 'text-danger' : 'text-success';
+                    
+                    const textContent = `
+                        <span class="name-details">
+                            ${iconContent}
+                            <span class="fw-bold text-dark">${nombreEmpleado}:</span>
+                        </span>
+                        
+                        <span class="time-details">
+                            <span class="time-range">
+                                ${entradaFmt} - <span class="${salidaClass}">${salidaFmt}</span>
+                            </span>
+                            <span class="saldo-diario fw-bold ${saldoColorClass}">
+                                (${formatTime(saldoFmt)})
+                            </span>
+                        </span>
+                    `;
+                    
+                    if (mainEl) {
+                        mainEl.innerHTML = textContent;
+                        mainEl.style.color = '#212529'; 
+                    }
+                    
+                    const tooltipText = `Jornada: ${entradaFmt} - ${salidaFmt}\nHoras Netas: ${props.horas_netas || 'N/A'}\nSaldo Diario: ${formatTime(saldoFmt)}`;
+                    eventEl.setAttribute('title', tooltipText);
+
+                } 
+                else if (eventType === 'dia_libre') {
+                    eventEl.classList.add('fc-event-dia-libre');
+                    const icon = props.estado === 'APROBADO' ? '<i class="bi bi-calendar-check-fill text-success me-1"></i>' : '<i class="bi bi-calendar-minus text-secondary me-1"></i>';
+                    
+                    const titleText = info.event.title || 'Día Libre'; 
+                    
+                    if (mainEl) {
+                        mainEl.innerHTML = `${icon} <span class="fw-bold">${nombreEmpleado}:</span> ${titleText} (${props.estado || 'N/A'})`;
+                        mainEl.style.color = '#495057';
+                    }
+                    
+                    const tooltipText = `Motivo: ${props.motivo || 'No especificado'}\nEstado: ${props.estado || 'N/A'}\nHoras: ${props.horas_solicitadas || 'N/A'}`;
+                    eventEl.setAttribute('title', tooltipText);
+                }
+            }
+
+            // --- FUNCIÓN CENTRAL DE INICIALIZACIÓN Y LÓGICA DE FILTRADO ---
+            
+            function initializeCalendar(initialDate) {
+                
+                const initialView = window.innerWidth < 768 ? 'listWeek' : 'dayGridMonth';
+                
+                calendar = new FullCalendar.Calendar(calendarEl, {
+                    locale: 'es', 
+                    height: 900, 
+                    initialDate: initialDate || new Date(), 
+                    
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,listWeek'
+                    },
+
+                    initialView: initialView,
+                    
+                    views: {
+                        listWeek: { 
+                            buttonText: 'Lista Semanal'
+                        }
+                    },
+                    
+                    events: {
+                        url: '{% url "control_horas:journal_data_api" %}',
+                        method: 'GET',
+                        extraParams: getCurrentFilters,
+                        cache: false, 
+                        failure: function(error) {
+                            console.error("Error al cargar eventos del calendario:", error.status, error.responseText);
+                            document.getElementById('calendar').innerHTML = '<div class="text-center p-5 text-danger font-weight-bold">⚠️ Error ' + error.status + ': La API no devolvió datos válidos. Revisa la consola para más detalles.</div>';
+                        }
+                    },
+                    
+                    eventClick: handleEventClick,
+                    eventDidMount: handleEventDidMount
+                });
+
+                calendar.render();
+            }
+            
+            function refreshCalendar() {
+                if (calendar) {
+                    calendar.refetchEvents();
+                }
+            }
+
+            // 1. Carga Inicial
+            const initialFilters = getCurrentFilters();
+            initializeCalendar(initialFilters.fecha_inicio); 
+
+            // 2. Manejar el envío del Formulario de Filtro (Botón "Aplicar")
+            if (filtroForm) {
+                filtroForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    var selectedStartDate = fechaInicioInput.value;
+                    
+                    if (selectedStartDate) {
+                        calendar.gotoDate(selectedStartDate);
+                    }
+                    
+                    refreshCalendar();
+                });
+            }
+
+            // 3. Manejar cambio de Empleado (Actualiza automáticamente)
+            if (selectEl) {
+                selectEl.addEventListener('change', function() {
+                    refreshCalendar();
+                });
+            }
+        });
+    </script>
+{% endblock %}

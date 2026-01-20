@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page {
+            size: letter;
+            margin: 1.5cm;
+            margin-bottom: 2.5cm; 
+        }
+
+        body {
+            font-family: 'Helvetica', sans-serif;
+            font-size: 10pt;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        /* Encabezado Principal */
+        .header-table { width: 100%; border-bottom: 4px solid #800020; margin-bottom: 20px; padding-bottom: 10px; }
+        .report-title { color: #800020; font-size: 22pt; font-weight: bold; margin: 0; letter-spacing: -1px; }
+        .report-number { color: #444; font-size: 12pt; text-align: right; }
+        .folio { color: #800020; font-size: 16pt; font-weight: bold; }
+
+        /* Ficha de Empresa (Diseño Destacado) */
+        .company-box {
+            background-color: #fcfcfc;
+            border: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        .company-header {
+            background-color: #800020;
+            color: white;
+            padding: 5px 12px;
+            font-weight: bold;
+            font-size: 9pt;
+            text-transform: uppercase;
+        }
+        .info-table { width: 100%; border-collapse: collapse; }
+        .info-table td { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+        .label { font-weight: bold; color: #555; width: 25%; font-size: 8.5pt; text-transform: uppercase; }
+        .value { color: #000; width: 75%; font-size: 10pt; }
+
+        /* Secciones Técnicas */
+        .section-header {
+            border-bottom: 2px solid #800020;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding-bottom: 3px;
+        }
+        .section-title {
+            color: #800020;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10pt;
+        }
+
+        /* Cajas de Contenido */
+        .content-box {
+            padding: 12px;
+            background-color: #fafafa;
+            border-left: 3px solid #ccc;
+            margin-bottom: 10px;
+            min-height: 50px;
+        }
+        .diagnostico-box {
+            background-color: #fdf2f4;
+            border-left: 3px solid #800020;
+            color: #333;
+        }
+
+        /* Galería de Fotos */
+        .photo-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
+        .photo-cell { 
+            width: 50%; 
+            padding: 8px; 
+            text-align: center; 
+            vertical-align: top;
+        }
+        .img-container {
+            border: 1px solid #ddd;
+            padding: 5px;
+            background: white;
+        }
+        .evidence-img { 
+            width: 260px; 
+            height: 190px; 
+            object-fit: cover;
+        }
+        .caption { 
+            font-size: 8pt; 
+            color: #777; 
+            margin-top: 6px; 
+            font-style: italic;
+            border-top: 1px solid #eee;
+            padding-top: 4px;
+        }
+
+        /* Footer */
+        #footer_content {
+            border-top: 1px solid #ddd;
+            padding-top: 8px;
+            color: #888;
+            font-size: 8pt;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="footer_content">
+        <table style="width: 100%;">
+            <tr>
+                <td>Documento Oficial de Servicio - Generado el {% now "d/m/Y H:i" %}</td>
+                <td style="text-align: right;">Página <pdf:pagenumber> de <pdf:pagecount></td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="header-table">
+        <tr>
+            <td>
+                <div class="report-title">REPORTE DE ASISTENCIA</div>
+                <div style="font-size: 9pt; color: #666; margin-top: 5px;">
+                    Técnico Responsable: <strong>{{ reporte.usuario.get_full_name|default:reporte.usuario.username }}</strong>
+                </div>
+            </td>
+            <td class="report-number">
+                <div class="folio">Nº {{ reporte.numero_reporte }}</div>
+                <div style="margin-top: 5px;">Fecha: <strong>{{ reporte.fecha_asistencia|date:"d/m/Y" }}</strong></div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="company-box">
+        <div class="company-header">Información del Cliente y Activo</div>
+        <table class="info-table">
+            <tr>
+                <td class="label">Empresa / Cliente</td>
+                <td class="value"><strong>{{ reporte.empresa.nombre }}</strong></td>
+            </tr>
+            <tr>
+                <td class="label">Equipo / Máquina</td>
+                <td class="value">{{ reporte.maquina }}</td>
+            </tr>
+            <tr>
+                <td class="label">Contacto Solicitante</td>
+                <td class="value">{{ reporte.persona_solicita }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section-header">
+        <span class="section-title">1. Descripción del Problema</span>
+    </div>
+    <div class="content-box">
+        {{ reporte.problema|linebreaksbr }}
+    </div>
+
+    <div class="section-header">
+        <span class="section-title">2. Diagnóstico Técnico y Hallazgos</span>
+    </div>
+    <div class="content-box diagnostico-box">
+        {{ reporte.problema_encontrado|linebreaksbr }}
+    </div>
+
+    <div class="section-header">
+        <span class="section-title">3. Solución y Trabajos Realizados</span>
+    </div>
+    <div class="content-box">
+        {{ reporte.solucion|linebreaksbr }}
+    </div>
+
+    {% if reporte.archivos.all %}
+        <div style="page-break-before: always;"></div> <div class="section-header">
+            <span class="section-title">Anexos: Evidencia Fotográfica</span>
+        </div>
+        
+        <table class="photo-table">
+            <tr>
+            {% for adjunto in reporte.archivos.all %}
+                {% if ".pdf" not in adjunto.archivo.name|lower %}
+                    <td class="photo-cell">
+                        <div class="img-container">
+                            <img src="{{ adjunto.archivo.path }}" class="evidence-img">
+                            <div class="caption">{{ adjunto.descripcion|default:"Registro de inspección" }}</div>
+                        </div>
+                    </td>
+                    
+                    {% if forloop.counter|divisibleby:2 and not forloop.last %}
+                        </tr><tr>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            
+            {% if not reporte.archivos.all.count|divisibleby:2 %}
+                <td class="photo-cell"></td>
+            {% endif %}
+            </tr>
+        </table>
+    {% endif %}
+
+</body>
+</html>

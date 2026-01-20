@@ -1,0 +1,417 @@
+{% extends "control_horas/base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Editar Registro Jornada #{{ registro.id }}{% endblock %}
+
+{% block extra_head %}
+    <style>
+        /* ========================================= */
+        /* ESTILOS BASE Y CUSTOM (HERENCIA DE BASE.HTML) */
+        /* ========================================= */
+        :root {
+            --burdeos: #800020;
+            --burdeos-dark: #6a001a;
+            --gray-light: #f7f9fc;
+            --gray-medium: #e5e7eb;
+            --gray-dark: #6b7280;
+        }
+
+        /* --- TÍTULO PRINCIPAL (Aseguramos coherencia) --- */
+        .page-main-title {
+            color: #1f2937;
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .page-main-title i {
+            color: var(--burdeos);
+        }
+
+        .page-subtitle {
+            color: var(--gray-dark);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        /* --- CARD PRINCIPAL (Panel de Edición) --- */
+        .edit-card {
+            border: 1px solid var(--gray-medium);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        }
+
+        /* --- NUEVO ESTILO: Card Header de Información Fija --- */
+        .card-info-header {
+            background-color: #f0f3f5; /* Fondo más claro que el cuerpo, más profesional */
+            border-bottom: 1px solid var(--gray-medium);
+            padding: 1.5rem 2rem;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        .info-block {
+            padding-right: 1.5rem;
+            border-right: 1px solid var(--gray-medium);
+        }
+        .info-block:last-child {
+            border-right: none;
+        }
+        .info-block-label {
+            color: var(--gray-dark);
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        .info-block-value {
+            color: #1f2937;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .info-block-value.employee {
+             color: var(--burdeos);
+        }
+
+        .edit-card-body {
+            padding: 2rem;
+        }
+        
+        /* --- ALERTAS UNIFICADAS --- */
+        .alert {
+            border-radius: 6px;
+            border: none;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #842029;
+            border-left: 4px solid #842029;
+        }
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #664d03;
+            border-left: 4px solid #ffc107;
+        }
+        
+        /* Estilo para el error de JS de salida */
+        #salida-error {
+            display: none; 
+            color: #dc3545; 
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+
+        /* --- FORMULARIOS --- */
+        .form-label {
+            color: #1f2937;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control {
+            border: 1px solid var(--gray-medium);
+            border-radius: 6px;
+            padding: 0.625rem 0.875rem;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--burdeos);
+            box-shadow: 0 0 0 0.2rem rgba(128, 0, 32, 0.15);
+            outline: none;
+        }
+        
+        /* --- PANEL DE HORAS --- */
+        .hours-panel {
+            border: 1px solid var(--gray-medium);
+            border-radius: 6px;
+            padding: 1.5rem;
+            background-color: #ffffff;
+            margin-top: 1rem;
+        }
+        .hours-panel-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--burdeos);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* --- PANEL DE IMPACTO (Resumen) --- */
+        .impact-panel {
+            background-color: #f9fbfd;
+            border: 1px solid var(--gray-medium);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin-top: 2rem;
+        }
+
+        .impact-summary-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .impact-summary-item .value {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .text-netas { color: var(--burdeos); }
+        .text-extras { color: #0f5132; }
+
+
+        /* --- BOTONES Y FOOTER (Heredados de base.html) --- */
+        .btn-primary {
+            background-color: var(--burdeos);
+            border-color: var(--burdeos);
+            color: #ffffff;
+        }
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: var(--burdeos-dark);
+            border-color: var(--burdeos-dark);
+        }
+        .actions-footer {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 1.5rem;
+            border-top: 2px solid var(--gray-medium);
+            margin-top: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .actions-footer {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            .actions-footer .btn {
+                width: 100%;
+                text-align: center;
+            }
+            .info-block {
+                border-right: none;
+                margin-bottom: 1rem;
+            }
+            .info-block:not(:last-child) {
+                border-bottom: 1px dashed var(--gray-medium);
+                padding-bottom: 1rem;
+            }
+        }
+    </style>
+{% endblock %} 
+
+{% block content %}
+<div class="row justify-content-center pt-4 pb-5">
+    <div class="col-12 col-lg-9 col-xl-7">
+        
+        {# TÍTULO PRINCIPAL #}
+        <h1 class="page-main-title">
+            <i class="bi bi-gear-wide-connected"></i>
+            Gestión y Corrección de Jornada
+        </h1>
+        
+        <p class="page-subtitle">
+            Utilice este panel para ajustar los marcajes de entrada y salida del registro **#{{ registro.id }}** y recalcular las horas.
+        </p>
+        
+        {# CARD PRINCIPAL DE EDICIÓN #}
+        <div class="edit-card">
+            
+            {# HEADER DE LA TARJETA - Información Fija #}
+            <div class="card-info-header">
+                <div class="row">
+                    <div class="col-md-6 info-block">
+                        <span class="info-block-label">
+                            <i class="bi bi-person-fill me-1"></i> Empleado
+                        </span>
+                        <span class="info-block-value employee">{{ registro.empleado.username }}</span>
+                    </div>
+                    <div class="col-md-6 info-block">
+                        <span class="info-block-label">
+                            <i class="bi bi-calendar-check me-1"></i> Fecha del Registro
+                        </span>
+                        <span class="info-block-value">{{ registro.fecha|date:"l, d M Y" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="edit-card-body">
+                
+                {# MENSAJES Y ALERTAS #}
+                {% if messages %}
+                    <div class="mb-3">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                {# ALERTA DE ERROR GENERAL DEL FORMULARIO (Non Field Errors) #}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        <strong><i class="bi bi-x-octagon-fill me-1"></i> Error de validación:</strong> Por favor, revise los campos marcados.
+                        <ul class="mt-2 mb-0">
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                
+                {# ALERTA DE SALIDA FORZADA #}
+                {% if registro.salida_forzada %}
+                <div class="alert alert-warning" role="alert">
+                    <p class="fw-bold">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        ¡ADVERTENCIA! Salida Forzada Detectada
+                    </p>
+                    <p class="small">
+                        El sistema registró una salida automática a las **17:00** debido a la falta de marcaje. **Debe corregir la hora de salida.**
+                    </p>
+                </div>
+                {% endif %}
+                
+                {# INICIO DEL FORMULARIO #}
+                <form method="post" id="registro-form">
+                    {% csrf_token %}
+                    
+                    {# Campos Ocultos - CRUCIALES #}
+                    {{ form.empleado }}
+                    {{ form.fecha }}
+                    {{ form.fecha_display }}
+
+                    {# PANEL DE HORAS (Los campos editables) #}
+                    <div class="hours-panel">
+                        <div class="hours-panel-title">
+                            <i class="bi bi-clock-fill"></i>
+                            Ajuste de Marcajes
+                        </div>
+                        
+                        <div class="row g-4">
+                            
+                            {# 1. Campo Entrada #}
+                            <div class="col-md-6">
+                                <label for="{{ form.entrada.id_for_label }}" class="form-label">
+                                    <i class="bi bi-arrow-right-circle me-1"></i> {{ form.entrada.label }}
+                                </label>
+                                {% render_field form.entrada class="form-control"|add_class:form.entrada.errors|yesno:'is-invalid,' type="time" id="id_entrada" %}
+                                {% for error in form.entrada.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            
+                            {# 2. Campo Salida #}
+                            <div class="col-md-6">
+                                <label for="{{ form.salida.id_for_label }}" class="form-label">
+                                    <i class="bi bi-arrow-left-circle me-1"></i> {{ form.salida.label }}
+                                </label>
+                                {% render_field form.salida class="form-control"|add_class:form.salida.errors|yesno:'is-invalid,' type="time" id="id_salida" %}
+                                {% for error in form.salida.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                                {# Espacio para el error de validación de JavaScript #}
+                                <div id="salida-error">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> La hora de salida no puede ser anterior o igual a la hora de entrada.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {# PANEL DE IMPACTO (Resumen de Horas) #}
+                    <div class="impact-panel">
+                        <div class="row">
+                            <div class="col-6">
+                                <span class="label text-muted">Horas Netas Registradas:</span>
+                                <div class="impact-summary-item">
+                                    <span class="value fs-5 text-netas">{{ registro.horas_netas|default:"0:00:00" }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6 text-end">
+                                <span class="label text-muted">Horas Extras Registradas:</span>
+                                <div class="impact-summary-item">
+                                    <span class="value fs-5 text-extras">{{ registro.horas_extras|default:"0:00:00" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="small text-muted mt-2 mb-0 border-top pt-2">
+                            <i class="bi bi-info-circle me-1"></i> El sistema recalculará automáticamente la jornada al guardar.
+                        </p>
+                    </div>
+
+                    {# BOTONES DE ACCIÓN (Contenidos en actions-footer) #}
+                    <div class="actions-footer">
+                        <a href="{% url 'control_horas:calendario_horas' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i> Cancelar y Volver
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submit-button">
+                            <i class="bi bi-check-circle-fill me-1"></i> Guardar Corrección
+                        </button>
+                    </div>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('registro-form');
+        const entradaField = document.getElementById('id_entrada');
+        const salidaField = document.getElementById('id_salida');
+        const salidaError = document.getElementById('salida-error');
+        salidaError.style.display = 'none';
+
+        // Función de validación
+        function validateTimes() {
+            const entrada = entradaField.value;
+            const salida = salidaField.value;
+
+            // Si los campos están vacíos, no bloqueamos el envío (lo hará Django si son requeridos)
+            if (!entrada || !salida) {
+                salidaError.style.display = 'none';
+                salidaField.classList.remove('is-invalid');
+                return true;
+            }
+
+            // Validación crucial: Entrada debe ser menor que Salida
+            if (entrada >= salida) {
+                salidaError.style.display = 'block';
+                salidaField.classList.add('is-invalid');
+                return false; // Validación fallida
+            } else {
+                salidaError.style.display = 'none';
+                salidaField.classList.remove('is-invalid');
+                return true; // Validación exitosa
+            }
+        }
+
+        // Ejecutar la validación al intentar enviar el formulario
+        form.addEventListener('submit', function(event) {
+            if (!validateTimes()) {
+                event.preventDefault(); 
+                salidaField.focus(); 
+            }
+        });
+
+        // Ejecutar la validación al cambiar los campos
+        entradaField.addEventListener('change', validateTimes);
+        salidaField.addEventListener('change', validateTimes);
+        
+        // Ejecutar la validación al cargar (para mostrar errores de Django si existen)
+        validateTimes();
+    });
+</script>
+{% endblock %}

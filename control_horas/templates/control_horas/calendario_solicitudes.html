@@ -1,0 +1,559 @@
+{% extends "control_horas/base.html" %}{% load static %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+    
+    <style>
+        /* ========================================= */
+        /* ESTILOS UNIFICADOS - CALENDARIO SOLICITUDES */
+        /* ========================================= */
+        
+        /* Ajuste de FullCalendar al Tema Borgoña */
+        :root {
+            --bs-primary: #800020; 
+            --fc-button-bg-color: #800020; 
+            --fc-button-hover-bg-color: #6a001a; 
+            --fc-button-active-bg-color: #6a001a;
+            --fc-button-border-color: #800020;
+            --fc-border-color: #e5e7eb;
+        }
+
+        /* --- CALENDARIO GENERAL --- */
+        .fc { 
+            max-width: 100%; 
+            margin: 0 auto;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .fc-daygrid-event { 
+            border-radius: 6px; 
+            margin-bottom: 2px; 
+            padding: 4px 6px;
+            margin-top: 2px;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); 
+        }
+
+        /* Botones de FullCalendar */
+        .fc .fc-button-primary {
+            background-color: #800020 !important; 
+            border-color: #800020 !important;
+            color: white !important;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .fc .fc-button-primary:hover {
+            background-color: #6a001a !important; 
+            border-color: #6a001a !important;
+            transform: translateY(-1px);
+        }
+
+        .fc-event-main { 
+            font-size: 0.8rem; 
+            padding: 0;
+            font-weight: 500; 
+            text-align: left;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        
+        /* --- COLORES DE ESTADO DE SOLICITUD --- */
+        .fc-event-day_libre-APROBADO {
+            background-color: #d1e7dd !important; 
+            border-left: 4px solid #0f5132 !important; 
+            color: #000000 !important; 
+        }
+        
+        .fc-event-day_libre-APROBADO .fc-event-main {
+            color: #000000 !important; 
+        }
+
+        .fc-event-day_libre-PENDIENTE {
+            background-color: #fff3cd !important; 
+            border-left: 4px solid #ffc107 !important;
+            color: #000000 !important; 
+            font-weight: bold;
+        }
+        
+        .fc-event-day_libre-PENDIENTE .fc-event-main {
+            color: #000000 !important; 
+        }
+
+        .fc-event-day_libre-RECHAZADO {
+            background-color: #f8d7da !important; 
+            border-left: 4px solid #dc3545 !important;
+            color: #000000 !important; 
+        }
+        
+        .fc-event-day_libre-RECHAZADO .fc-event-main {
+            color: #000000 !important; 
+        }
+
+        .fc-event-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: inherit !important; 
+        }
+
+        /* --- TÍTULO PRINCIPAL UNIFICADO --- */
+        .page-main-title {
+            color: #1f2937;
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .page-main-title i {
+            color: #800020;
+        }
+
+        /* --- CARDS UNIFICADAS --- */
+        .unified-card {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
+        }
+
+        .unified-card-header {
+            background-color: #800020;
+            color: #ffffff;
+            padding: 0.75rem 1rem;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .unified-card-header i {
+            margin-right: 0.5rem;
+        }
+
+        .unified-card-body {
+            padding: 1rem 1.25rem;
+        }
+
+        /* Border accent para cards especiales */
+        .card-accent-primary {
+            border-left: 4px solid #800020;
+        }
+
+        .card-accent-info {
+            border-left: 4px solid #6b7280;
+        }
+
+        /* --- FORMULARIOS UNIFICADOS --- */
+        .form-label {
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.375rem;
+        }
+
+        .form-select,
+        .form-control {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .form-select:focus,
+        .form-control:focus {
+            border-color: #800020;
+            box-shadow: 0 0 0 0.2rem rgba(128, 0, 32, 0.15);
+        }
+
+        .form-control:disabled {
+            background-color: #f8f8f8;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+
+        /* --- BOTONES UNIFICADOS --- */
+        .btn-primary {
+            background-color: #800020;
+            border-color: #800020;
+            color: #ffffff;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #6a001a;
+            border-color: #6a001a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(128, 0, 32, 0.2);
+        }
+
+        .btn-secondary {
+            background-color: #6b7280;
+            border-color: #6b7280;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4b5563;
+            border-color: #4b5563;
+        }
+
+        /* --- BADGES UNIFICADOS --- */
+        .badge {
+            font-weight: 600;
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+        }
+
+        .badge-legend {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        /* --- MODAL UNIFICADO --- */
+        .modal-header {
+            background-color: #800020;
+            color: #ffffff;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .modal-body {
+            background-color: #ffffff;
+            color: #1f2937;
+        }
+
+        .modal-body .text-muted {
+            color: #6b7280 !important;
+        }
+
+        .modal-body .text-dark {
+            color: #1f2937 !important;
+        }
+
+        .modal-footer {
+            background-color: #f8f8f8;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* --- CALENDARIO CONTENEDOR --- */
+        #solicitudesCalendar {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .page-main-title {
+                font-size: 1.5rem;
+            }
+
+            #solicitudesCalendar {
+                padding: 1rem;
+            }
+
+            .unified-card-body {
+                padding: 0.75rem 1rem;
+            }
+        }
+    </style>
+{% endblock extra_head %}
+
+{% block page_title %}
+   
+{% endblock page_title %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12"> 
+        
+        {# TÍTULO PRINCIPAL UNIFICADO #}
+        <h1 class="page-main-title">
+            <i class="bi bi-calendar-week"></i>
+             Calendario de Solicitudes
+        </h1>
+
+        {% if is_staff %}
+        
+        {# === CARD DE FILTRO STAFF === #}
+        <div class="unified-card card-accent-primary">
+            <div class="unified-card-header">
+                <i class="bi bi-funnel"></i>Herramientas de Filtrado
+            </div>
+            <div class="unified-card-body">
+                <form id="filtro-form" class="row g-3 align-items-end">
+                    
+                    <div class="col-12 col-md-4">
+                        <label for="empleado-select" class="form-label">Filtrar por Funcionario:</label>
+                        <select id="empleado-select" class="form-select form-select-sm">
+                            <option value="" selected>--- Todos los funcionarios ---</option> 
+                            {% for emp in empleados %}
+                                <option value="{{ emp.user.username }}">{{ emp.user.username|capfirst }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-6 col-md-3">
+                        <label for="fecha-inicio-input" class="form-label">Fecha Inicio (Ir a):</label>
+                        <input type="date" id="fecha-inicio-input" class="form-control form-control-sm">
+                    </div>
+                    
+                    <div class="col-6 col-md-3">
+                        <label for="fecha-fin-input" class="form-label">Fecha Fin:</label>
+                        <input type="date" id="fecha-fin-input" class="form-control form-control-sm" disabled title="Este campo no se utiliza para el filtro de calendario.">
+                    </div>
+                    
+                    <div class="col-12 col-md-2 d-grid">
+                        <button type="submit" class="btn btn-primary btn-sm" id="aplicar-filtro-btn">
+                            <i class="bi bi-funnel-fill me-1"></i> Aplicar Filtro
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {# === CARD DE LEYENDA === #}
+        <div class="unified-card card-accent-info">
+            <div class="unified-card-body">
+                <h6 class="mb-3 fw-bold text-muted" style="font-size: 0.9rem;">
+                    <i class="bi bi-info-circle-fill me-2" style="color: #6b7280;"></i>Guía Visual - Estado de Solicitudes
+                </h6>
+                <div class="d-flex flex-wrap gap-3">
+                    <div class="d-flex align-items-center">
+                        <span class="badge badge-legend" style="background-color: #d1e7dd; color: #0f5132; border-left: 4px solid #0f5132;">
+                            <i class="bi bi-calendar-check-fill me-1"></i> Aprobado
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="badge badge-legend bg-warning text-dark">
+                            <i class="bi bi-calendar-minus-fill me-1"></i> Pendiente
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="badge badge-legend" style="background-color: #f8d7da; color: #dc3545;">
+                            <i class="bi bi-x-circle-fill me-1"></i> Rechazado
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% endif %}
+
+        {# === CALENDARIO === #}
+        <div id="solicitudesCalendar"></div>
+    </div>
+</div>
+
+{# === MODAL DE DETALLE === #}
+<div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 8px; overflow: hidden;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="requestModalLabel">
+                    <i class="bi bi-info-circle me-2"></i>Detalle de Solicitud de Ausencia
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3 mb-4 pb-3 border-bottom">
+                    <div class="col-12">
+                        <span class="fw-bold d-block text-muted small mb-1">Fecha Solicitada:</span> 
+                        <span class="fs-5 fw-bold text-dark" id="modal-fecha-solicitud"></span>
+                    </div>
+                    <div class="col-12">
+                        <span class="fw-bold d-block text-muted small mb-1">Funcionario:</span> 
+                        <span class="fs-5 fw-bold" style="color: #800020;" id="modal-empleado-solicitud"></span>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <span class="fw-bold d-block text-muted small mb-1">Horas Solicitadas:</span>
+                        <span class="fs-4 fw-bold" style="color: #800020;" id="modal-horas-solicitadas"></span>
+                    </div>
+                    <div class="col-6 text-end">
+                        <span class="fw-bold d-block text-muted small mb-1">Estado Actual:</span>
+                        <span id="modal-estado-solicitud" class="badge fs-6 py-2 px-3"></span>
+                    </div>
+                </div>
+                
+                <div class="mb-0">
+                    <h6 class="mb-2 fw-bold" style="color: #800020;">
+                        <i class="bi bi-chat-left-text me-2"></i>Motivo Detallado:
+                    </h6>
+                    <div class="p-3 rounded" style="background-color: #f8f8f8; border: 1px solid #e5e7eb;">
+                        <p id="modal-motivo-solicitud" class="mb-0 small text-muted"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                {% if is_staff %}
+                <a href="{% url 'control_horas:gestion_solicitudes' %}" class="btn btn-primary">
+                    <i class="bi bi-tools me-1"></i> Ir a Gestión
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var solicitudesCalendarEl = document.getElementById('solicitudesCalendar');
+            var selectEl = document.getElementById('empleado-select');
+            var fechaInicioInput = document.getElementById('fecha-inicio-input'); 
+            var fechaFinInput = document.getElementById('fecha-fin-input');     
+            var filtroForm = document.getElementById('filtro-form');           
+
+            var solicitudesCalendar;
+            var requestModal = new bootstrap.Modal(document.getElementById('requestModal'));
+
+            // FUNCIÓN 1: Obtener los filtros actuales de la UI
+            function getCurrentFilters() {
+                const empleadoFilter = selectEl ? selectEl.value : ''; 
+                return {
+                    empleado: empleadoFilter, 
+                    tipo: 'solicitudes'
+                };
+            }
+
+            // FUNCIÓN 2: Inicializar el calendario (solo se llama una vez)
+            function loadCalendar() {
+                const initialView = window.innerWidth < 768 ? 'timeGridWeek' : 'dayGridMonth';
+                
+                solicitudesCalendar = new FullCalendar.Calendar(solicitudesCalendarEl, {
+                    locale: 'es',
+                    height: 800, 
+                    initialView: initialView,
+                    
+                    headerToolbar: { 
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek'
+                    },
+                    editable: false, 
+                    selectable: false, 
+                    allDay: true, 
+                    
+                    events: {
+                        url: '{% url "control_horas:journal_data_api" %}', 
+                        method: 'GET',
+                        extraParams: getCurrentFilters, 
+                        cache: false 
+                    },
+                    
+                    eventClick: handleEventClick,
+                    eventDidMount: handleEventDidMount
+                });
+                solicitudesCalendar.render();
+            }
+
+            // FUNCIÓN 3: Recargar los eventos con los filtros actuales
+            function refreshCalendar() {
+                if (solicitudesCalendar) {
+                    solicitudesCalendar.refetchEvents();
+                }
+            }
+            
+            // =========================================================
+            // LÓGICA DE INICIALIZACIÓN Y EVENT LISTENERS
+            // =========================================================
+            
+            loadCalendar();
+
+            // 1. Manejar cambio de Empleado
+            if (selectEl) {
+                selectEl.addEventListener('change', function() {
+                    refreshCalendar(); 
+                });
+            }
+
+            // 2. Manejar el envío del Formulario de Filtro (para ir a la fecha)
+            if (filtroForm) {
+                filtroForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    var selectedStartDate = fechaInicioInput.value;
+                    if (selectedStartDate && solicitudesCalendar) {
+                        solicitudesCalendar.gotoDate(selectedStartDate);
+                    }
+                });
+            }
+            
+            // Manejador del Click
+            function handleEventClick(info) {
+                var props = info.event.extendedProps;
+                
+                if (props.tipo !== 'dia_libre') return;
+
+                const estado = props.estado ? props.estado.toUpperCase() : 'PENDIENTE';
+                
+                let badgeClass = 'bg-secondary';
+                if (estado === 'APROBADO') badgeClass = 'bg-success';
+                else if (estado === 'PENDIENTE') badgeClass = 'bg-warning text-dark';
+                else if (estado === 'RECHAZADO') badgeClass = 'bg-danger'; 
+
+                const fecha = info.event.start;
+                const fechaFormateada = fecha.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                
+                document.getElementById('modal-fecha-solicitud').innerText = fechaFormateada;
+                document.getElementById('modal-empleado-solicitud').innerText = props.empleado || 'N/A';
+                document.getElementById('modal-horas-solicitadas').innerText = props.horas_solicitadas || '8:00';
+                
+                const estadoEl = document.getElementById('modal-estado-solicitud');
+                estadoEl.innerText = estado;
+                estadoEl.className = `badge fs-6 py-2 px-3 ${badgeClass}`; 
+                
+                document.getElementById('modal-motivo-solicitud').innerText = props.motivo || 'Motivo no especificado.';
+                
+                requestModal.show();
+            }
+
+            // FUNCIÓN DE MONTAJE
+            function handleEventDidMount(info) {
+                const props = info.event.extendedProps;
+                const eventEl = info.el;
+                const mainEl = eventEl.querySelector('.fc-event-main'); 
+                
+                if (props.tipo === 'dia_libre') {
+                    const estado = props.estado.toUpperCase();
+                    eventEl.classList.add(`fc-event-day_libre-${estado}`);
+                    
+                    if (mainEl) {
+                        const horas = props.horas_solicitadas || '00:00';
+                        const nombreEmpleado = props.empleado ? props.empleado.charAt(0).toUpperCase() + props.empleado.slice(1) : 'N/A';
+                        
+                        const icon = estado === 'APROBADO' ? '<i class="bi bi-calendar-check-fill me-1"></i>' : (estado === 'PENDIENTE' ? '<i class="bi bi-calendar-minus-fill me-1"></i>' : '<i class="bi bi-x-circle-fill me-1"></i>');
+                        
+                        mainEl.innerHTML = `${icon} <span class="fw-bold">${nombreEmpleado}</span> - ${horas} (${estado})`;
+                    }
+                }
+                
+                eventEl.removeAttribute('href');
+                eventEl.style.cursor = 'pointer';
+            }
+        });
+    </script>
+{% endblock extra_js %}

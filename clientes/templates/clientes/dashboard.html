@@ -1,0 +1,641 @@
+{% extends "control_horas/base.html" %}
+{% load static %}
+
+{% block title %}Clientes - Dashboard{% endblock %}
+{% block page_title %}Panel de Gestión de Clientes{% endblock %}
+
+{% block horizontal_breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'control_horas:main_dashboard' %}">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Clientes</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root { 
+        --color-burdeo: #800020; 
+        --color-burdeo-soft: #f8e6e9; 
+        --color-gris-oscuro: #4a4a4a; 
+        --color-azul-servidor: #0d6efd;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    }
+    
+    /* === HEADER DE BIENVENIDA === */
+    .welcome-header {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .welcome-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(128, 0, 32, 0.05) 0%, transparent 70%);
+        animation: pulse-bg 6s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-bg {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.2); opacity: 0.8; }
+    }
+    
+    .welcome-title {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--color-burdeo), #600018);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .welcome-subtitle {
+        color: #6b7280;
+        font-size: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* === STAT CARDS === */
+    .stat-card { 
+        border: none; 
+        border-radius: 20px; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        background: white; 
+        overflow: hidden;
+        position: relative;
+        height: 100%;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        background: linear-gradient(90deg, var(--color-burdeo), #600018, var(--color-burdeo));
+        background-size: 200% 100%;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .stat-card:hover::before {
+        opacity: 1;
+        animation: shimmer 2s linear infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-12px) scale(1.02);
+        box-shadow: 0 20px 60px rgba(128, 0, 32, 0.25);
+    }
+    
+    .icon-box { 
+        width: 85px; 
+        height: 85px; 
+        border-radius: 20px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 2.2rem; 
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s ease;
+    }
+    
+    .icon-box::before {
+        content: '';
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+        animation: pulse-icon 4s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-icon {
+        0%, 100% { transform: scale(0.9) rotate(0deg); opacity: 0.4; }
+        50% { transform: scale(1.3) rotate(180deg); opacity: 0.7; }
+    }
+    
+    .stat-card:hover .icon-box {
+        transform: scale(1.15) rotate(-5deg);
+    }
+    
+    .bg-soft-burdeo { 
+        background: linear-gradient(135deg, var(--color-burdeo-soft) 0%, #fce4e9 100%); 
+        color: var(--color-burdeo); 
+    }
+    
+    .bg-soft-azul { 
+        background: linear-gradient(135deg, #e7f0ff 0%, #d1e3ff 100%); 
+        color: var(--color-azul-servidor); 
+    }
+    
+    .bg-soft-gris {
+        background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+        color: var(--color-gris-oscuro);
+    }
+    
+    .bg-soft-verde {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        color: #155724;
+    }
+    
+    .stat-number {
+        font-size: 2.8rem;
+        font-weight: 900;
+        line-height: 1;
+        background: linear-gradient(135deg, var(--color-burdeo), #600018);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -1px;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: #9ca3af;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-link {
+        color: var(--color-burdeo);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-link:hover {
+        color: #600018;
+        transform: translateX(3px);
+    }
+    
+    .stat-link i {
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-link:hover i {
+        transform: translateX(4px);
+    }
+    
+    /* === QUICK ACTIONS === */
+    .quick-action-card { 
+        background: linear-gradient(135deg, var(--color-burdeo) 0%, #600018 100%); 
+        color: white; 
+        border-radius: 20px; 
+        padding: 2.5rem; 
+        box-shadow: 0 15px 40px rgba(128, 0, 32, 0.4);
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+        transition: all 0.4s ease;
+    }
+    
+    .quick-action-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 300%;
+        height: 300%;
+        background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
+        animation: rotate-bg 25s linear infinite;
+    }
+    
+    @keyframes rotate-bg {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .quick-action-card:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 25px 60px rgba(128, 0, 32, 0.6);
+    }
+    
+    .quick-action-card h6 {
+        position: relative;
+        z-index: 1;
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .quick-action-card .btn {
+        position: relative;
+        z-index: 1;
+        border-radius: 12px;
+        font-weight: 700;
+        padding: 0.875rem;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.85rem;
+    }
+    
+    .quick-action-card .btn-light {
+        background: white;
+        color: var(--color-burdeo);
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .quick-action-card .btn-light:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        background: #f8f9fa;
+    }
+    
+    .quick-action-card .btn-outline-light {
+        border: 2px solid white;
+        color: white;
+        background: transparent;
+    }
+    
+    .quick-action-card .btn-outline-light:hover {
+        background: white;
+        color: var(--color-burdeo);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(255,255,255,0.3);
+    }
+    
+    /* === TABLE CARD === */
+    .table-card { 
+        background: white; 
+        border-radius: 20px; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+        border: none; 
+        margin-top: 2.5rem;
+        overflow: hidden;
+    }
+    
+    .table-card .card-header {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border-bottom: 3px solid var(--color-burdeo-soft);
+        padding: 2rem;
+    }
+    
+    .table-card .card-header h5 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .badge-burdeo { 
+        background: linear-gradient(135deg, var(--color-burdeo-soft) 0%, #fce4e9 100%);
+        color: var(--color-burdeo); 
+        border: 2px solid var(--color-burdeo);
+        font-weight: 800;
+        font-family: 'Courier New', monospace;
+        padding: 0.6rem 1rem;
+        border-radius: 10px;
+        letter-spacing: 0.5px;
+        font-size: 0.9rem;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .badge-burdeo:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(128, 0, 32, 0.2);
+    }
+    
+    .btn-burdeo {
+        background: linear-gradient(135deg, var(--color-burdeo) 0%, #600018 100%);
+        border: none;
+        color: white;
+        font-weight: 700;
+        padding: 0.875rem 2rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(128, 0, 32, 0.3);
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .btn-burdeo:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(128, 0, 32, 0.5);
+        color: white;
+    }
+    
+    .table thead th {
+        background: linear-gradient(135deg, var(--color-burdeo-soft) 0%, #fce4e9 100%);
+        color: var(--color-gris-oscuro);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 1.5px;
+        padding: 1.25rem 1rem;
+        border: none;
+    }
+    
+    .table tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .table tbody tr:hover {
+        background: linear-gradient(90deg, rgba(248, 230, 233, 0.5) 0%, rgba(248, 230, 233, 0.1) 100%);
+        transform: scale(1.005);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1rem;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+    }
+    
+    .user-avatar:hover {
+        transform: scale(1.15);
+        box-shadow: 0 5px 15px rgba(128, 0, 32, 0.3);
+    }
+    
+    .btn-view-detail {
+        background: linear-gradient(135deg, var(--color-burdeo-soft), #fce4e9);
+        color: var(--color-burdeo);
+        border: 2px solid var(--color-burdeo);
+        border-radius: 10px;
+        font-weight: 700;
+        padding: 0.5rem 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-view-detail:hover {
+        background: linear-gradient(135deg, var(--color-burdeo), #600018);
+        color: white;
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(128, 0, 32, 0.3);
+    }
+    
+    /* === EMPTY STATE === */
+    .empty-state {
+        padding: 5rem 2rem;
+        text-align: center;
+    }
+    
+    .empty-state i {
+        font-size: 6rem;
+        color: #ddd;
+        margin-bottom: 2rem;
+        opacity: 0.4;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+    }
+    
+    .empty-state h5 {
+        font-weight: 700;
+        color: #6b7280;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state p {
+        color: #9ca3af;
+        margin-bottom: 2rem;
+    }
+    
+    /* === CARD LINK === */
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    
+    .card-link:hover {
+        color: inherit;
+    }
+    
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+        .welcome-header {
+            padding: 1.5rem;
+        }
+        
+        .welcome-title {
+            font-size: 1.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+        }
+        
+        .icon-box {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+        
+        .table-card .card-header {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    
+    {# WELCOME HEADER #}
+    <div class="welcome-header">
+        <div class="row align-items-center">
+            <div class="col-lg-9">
+                <h1 class="welcome-title">
+                    <i class="bi bi-headset me-2"></i>Gestión de Clientes
+                </h1>
+                <p class="text-muted mb-0">
+                    Administre empresas, técnicos y documentación desde un solo lugar.
+                </p>
+            </div>
+            <div class="col-lg-3 text-end d-none d-lg-block">
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2">
+                    <i class="bi bi-patch-check-fill me-1"></i> Sistema en Línea
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    {# STATS GRID #}
+    <div class="row g-4 mb-5">
+        <!-- Empresas -->
+        <div class="col-xl-4 col-md-6">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <div class="icon-box bg-soft-burdeo">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <div class="text-end">
+                            <p class="text-muted small fw-bold text-uppercase mb-0">Empresas</p>
+                            <h2 class="fw-black mb-0" style="font-size: 2.2rem; color: var(--color-burdeo);">{{ total_empresas }}</h2>
+                        </div>
+                    </div>
+                    <a href="{% url 'clientes:empresas' %}" class="stat-link" style="color: var(--color-burdeo);">
+                        Directorio <i class="bi bi-chevron-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reportes -->
+        <div class="col-xl-4 col-md-6">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <div class="icon-box bg-soft-gris">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </div>
+                        <div class="text-end">
+                            <p class="text-muted small fw-bold text-uppercase mb-0">Total Reportes</p>
+                            <h2 class="fw-black mb-0" style="font-size: 2.2rem; color: var(--color-gris-oscuro);">{{ total_reportes }}</h2>
+                        </div>
+                    </div>
+                    <a href="{% url 'clientes:asistencias' %}" class="stat-link" style="color: var(--color-gris-oscuro);">
+                        Historial <i class="bi bi-chevron-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Servidor -->
+        <div class="col-xl-4 col-md-12">
+            <div class="stat-card" style="border-left: 4px solid var(--color-azul-servidor);">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <div class="icon-box bg-soft-azul">
+                            <i class="bi bi-cloud-check"></i>
+                        </div>
+                        <div class="text-end">
+                            <p class="text-muted small fw-bold text-uppercase mb-0">Servidor Red</p>
+                            <h2 class="fw-black mb-0" style="font-size: 1.8rem; color: var(--color-azul-servidor);">Unidad Y:</h2>
+                        </div>
+                    </div>
+                    <a href="{% url 'clientes:listar_documentos_red' %}" class="stat-link" style="color: var(--color-azul-servidor);">
+                        Explorar Archivos <i class="bi bi-hdd-network ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {# RECENT REPORTS TABLE #}
+    <div class="table-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5>
+                <i class="bi bi-clock-history me-3" style="color: var(--color-burdeo);"></i>Últimas Asistencias Realizadas
+            </h5>
+           
+        </div>
+        
+        <div class="card-body p-0">
+            {% if reportes_recientes %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Nº Reporte</th>
+                            <th>Cliente</th>
+                            <th>Equipo / Máquina</th>
+                            <th>Fecha</th>
+                            <th>Técnico</th>
+                            <th class="text-center pe-4">Detalles</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reporte in reportes_recientes %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="badge-burdeo">{{ reporte.numero_reporte }}</span>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark mb-1">{{ reporte.empresa.nombre }}</div>
+                                <div class="text-muted small">
+                                    <i class="bi bi-person-circle me-1"></i>{{ reporte.persona_solicita }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-dark fw-semibold">
+                                    <i class="bi bi-cpu-fill me-2" style="color: var(--color-burdeo);"></i>{{ reporte.maquina }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">
+                                    <i class="bi bi-calendar-event me-1"></i>{{ reporte.fecha_asistencia|date:"d/m/Y" }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar bg-soft-burdeo me-2">
+                                        {{ reporte.usuario.username|slice:":1"|upper }}
+                                    </div>
+                                    <span class="fw-semibold">{{ reporte.usuario.get_full_name|default:reporte.usuario.username }}</span>
+                                </div>
+                            </td>
+                            <td class="text-center pe-4">
+                                <a href="{% url 'clientes:detalle_reporte' reporte.pk %}" class="btn btn-sm btn-view-detail">
+                                    <i class="bi bi-eye-fill"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h5>No hay reportes recientes</h5>
+                <p>Comienza creando un nuevo reporte de asistencia técnica para tus clientes</p>
+                <a href="{% url 'clientes:crear_reporte' %}" class="btn btn-burdeo">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Crear Primer Reporte
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+</div>
+{% endblock %}

@@ -1,0 +1,374 @@
+{% extends "control_horas/base.html" %}
+{% load static %}
+
+{% block title %}{% if editing %}Editar{% else %}Nuevo{% endif %} Reporte de Asistencia{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root { 
+        --color-burdeo: #800020; 
+        --color-burdeo-soft: #f8e6e9; 
+        --color-gris-oscuro: #4a4a4a; 
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    }
+    
+    .form-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+        border: none;
+    }
+    
+    .form-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, var(--color-burdeo), #600018);
+    }
+    
+    .section-title {
+        color: var(--color-burdeo);
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .section-title i {
+        font-size: 1.5rem;
+        padding: 0.5rem;
+        background: linear-gradient(135deg, var(--color-burdeo-soft), #fce4e9);
+        border-radius: 12px;
+    }
+
+    .date-container {
+        display: flex;
+        gap: 1rem;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        border: 2px solid var(--color-burdeo-soft);
+    }
+
+    .date-badge {
+        flex: 1;
+        padding: 1.25rem;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f8f9fa, #ffffff);
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .date-badge:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+
+    .date-label {
+        display: block;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+        letter-spacing: 1px;
+    }
+    
+    .date-badge.highlight {
+        background: linear-gradient(135deg, var(--color-burdeo-soft), #fce4e9);
+        border-color: var(--color-burdeo);
+    }
+    
+    .date-badge.highlight .date-label {
+        color: var(--color-burdeo);
+    }
+
+    .required-field::after {
+        content: "*";
+        color: var(--color-burdeo);
+        margin-left: 4px;
+        font-weight: bold;
+    }
+    
+    .form-label { 
+        font-weight: 600; 
+        color: var(--color-gris-oscuro);
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        padding: 0.875rem;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--color-burdeo);
+        box-shadow: 0 0 0 0.2rem rgba(128, 0, 32, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .bg-diagnostico {
+        background: linear-gradient(135deg, #fff5f5, #ffe5e5);
+        border-left: 5px solid #dc3545 !important;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.1);
+    }
+    
+    .bg-diagnostico .form-label {
+        color: #dc3545;
+    }
+
+    .btn-primary-custom {
+        background: linear-gradient(135deg, var(--color-burdeo) 0%, #600018 100%);
+        border: none; 
+        color: white; 
+        font-weight: 600; 
+        padding: 1rem 2.5rem;
+        border-radius: 12px; 
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(128, 0, 32, 0.3);
+    }
+    
+    .btn-primary-custom:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(128, 0, 32, 0.5);
+        color: white;
+    }
+
+    .file-row {
+        background: linear-gradient(135deg, #f8f9fa, #ffffff);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 2px dashed #ced4da;
+        transition: all 0.3s ease;
+    }
+    
+    .file-row:hover {
+        border-color: var(--color-burdeo);
+        background: var(--color-burdeo-soft);
+        transform: translateX(5px);
+    }
+    
+    .form-text {
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+    }
+    
+    .alert-info {
+        background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+        border: none;
+        border-left: 4px solid #17a2b8;
+        border-radius: 12px;
+    }
+    
+    .page-header {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .footer-actions {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="page-header">
+        <h2 class="h4 mb-0 text-dark fw-bold">
+            <i class="bi bi-file-earmark-medical-fill me-2" style="color: var(--color-burdeo);"></i>
+            {% if editing %}
+                Editando Reporte: <span style="color: var(--color-burdeo);">{{ reporte.numero_reporte }}</span>
+            {% else %}
+                Nuevo Registro de Asistencia Técnica
+            {% endif %}
+        </h2>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="reporteForm">
+        {% csrf_token %}
+        
+        <div class="date-container">
+            <div class="date-badge">
+                <span class="date-label"><i class="bi bi-clock-history me-1"></i> Registro en Sistema</span>
+                <span class="fw-bold text-muted" style="font-size: 1.1rem;">
+                    {% if editing %}
+                        {{ reporte.fecha_generacion|date:"d/m/Y H:i" }}
+                    {% else %}
+                        {% now "d/m/Y H:i" %} <small>(Automático)</small>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="date-badge highlight">
+                <span class="date-label"><i class="bi bi-calendar-check-fill me-1"></i> Fecha Real del Servicio</span>
+                {{ form.fecha_asistencia }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="bi bi-building-fill"></i> 
+                        Información del Cliente
+                    </h3>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required-field">Empresa Cliente</label>
+                            {{ form.empresa }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">¿Es empresa nueva?</label>
+                            {{ form.nueva_empresa }}
+                            <div class="form-text text-muted">
+                                <i class="bi bi-info-circle me-1"></i>Solo si no está en la lista
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required-field">Máquina / Equipo</label>
+                            {{ form.maquina }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required-field">Persona que solicitó</label>
+                            {{ form.persona_solicita }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="bi bi-search"></i> 
+                        Evaluación Técnica
+                    </h3>
+                    <div class="mb-4">
+                        <label class="form-label required-field">Problema Reportado por el Cliente</label>
+                        {{ form.problema }}
+                        <div class="form-text">
+                            <i class="bi bi-chat-left-quote me-1"></i>
+                            Describa los síntomas tal como los reportó el cliente
+                        </div>
+                    </div>
+                    
+                    <div class="bg-diagnostico">
+                        <label class="form-label required-field">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            Problema Real Encontrado (Diagnóstico Técnico)
+                        </label>
+                        {{ form.problema_encontrado }}
+                        <div class="form-text text-danger fw-medium">
+                            <i class="bi bi-info-circle-fill me-1"></i>
+                            <strong>Importante:</strong> Especifique el fallo real detectado durante la inspección
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="form-section h-100">
+                    <h3 class="section-title text-success">
+                        <i class="bi bi-tools"></i> 
+                        Resolución del Servicio
+                    </h3>
+                    <div class="mb-4">
+                        <label class="form-label required-field">Acciones Realizadas</label>
+                        {{ form.solucion }}
+                        <div class="form-text text-success">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Detalle los trabajos y reparaciones ejecutadas
+                        </div>
+                    </div>
+
+                    <h3 class="section-title" style="color: #0d6efd;">
+                        <i class="bi bi-camera-fill"></i> 
+                        Evidencia y Documentos
+                    </h3>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-1"></i> 
+                        Puede adjuntar fotos (JPG/PNG) o documentos (PDF)
+                    </div>
+                    
+                    {{ formset.management_form }}
+                    <div id="archivos-container">
+                        {% for f in formset %}
+                        <div class="file-row">
+                            <div class="mb-2">
+                                <label class="form-label small mb-2">
+                                    <i class="bi bi-paperclip me-1"></i>Archivo
+                                </label>
+                                {{ f.archivo }}
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="flex-grow-1">
+                                    <label class="form-label small mb-1">Descripción</label>
+                                    {{ f.descripcion }}
+                                </div>
+                                {% if f.instance.pk %}
+                                <div class="form-check text-danger">
+                                    {{ f.DELETE }} 
+                                    <label class="form-check-label small">
+                                        <i class="bi bi-trash-fill"></i> Eliminar
+                                    </label>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {{ f.id }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-actions d-flex justify-content-between align-items-center">
+            <a href="{% url 'clientes:asistencias' %}" class="btn btn-link text-decoration-none text-secondary fw-semibold">
+                <i class="bi bi-x-circle me-1"></i> Cancelar
+            </a>
+            
+            <div class="d-flex gap-3">
+                {% if editing %}
+                    <a href="{% url 'clientes:reporte_pdf' reporte.pk %}" target="_blank" class="btn btn-outline-danger" style="border-radius: 12px; font-weight: 600;">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Ver PDF
+                    </a>
+                {% endif %}
+                <button type="submit" class="btn btn-primary-custom">
+                    <i class="bi bi-check2-circle me-1"></i>
+                    {% if editing %}Guardar Cambios{% else %}Finalizar y Guardar Reporte{% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

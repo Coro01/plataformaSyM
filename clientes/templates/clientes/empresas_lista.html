@@ -1,0 +1,340 @@
+{% extends "control_horas/base.html" %}
+{% load static %}
+
+{% block title %}Lista de Empresas{% endblock %}
+{% block page_title %}Empresas Clientes{% endblock %}
+
+{% block horizontal_breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'control_horas:main_dashboard' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'clientes:dashboard' %}">Clientes</a></li>
+        <li class="breadcrumb-item active">Empresas</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root { 
+        --color-burdeo: #800020; 
+        --color-burdeo-soft: #f8e6e9; 
+        --color-gris-oscuro: #4a4a4a; 
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    }
+    
+    .page-header {
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, var(--color-burdeo), #600018, var(--color-burdeo));
+        background-size: 200% 100%;
+        animation: shimmer 3s linear infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    
+    .table-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        background: white;
+        overflow: hidden;
+    }
+    
+    .btn-burdeo {
+        background: linear-gradient(135deg, var(--color-burdeo) 0%, #600018 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 0.875rem 2rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(128, 0, 32, 0.3);
+    }
+    
+    .btn-burdeo:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(128, 0, 32, 0.5);
+        color: white;
+    }
+    
+    .search-box {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .form-control {
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        padding: 0.875rem 1.25rem;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .form-control:focus {
+        border-color: var(--color-burdeo);
+        box-shadow: 0 0 0 0.2rem rgba(128, 0, 32, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    .input-group-text {
+        border-radius: 12px 0 0 12px;
+        border: 2px solid #e9ecef;
+        border-right: none;
+        background: white;
+        padding: 0 1.25rem;
+    }
+    
+    .input-group .form-control {
+        border-left: none;
+        border-radius: 0 12px 12px 0;
+    }
+    
+    .table thead th {
+        background: linear-gradient(135deg, var(--color-burdeo-soft) 0%, #fce4e9 100%);
+        color: var(--color-gris-oscuro);
+        font-weight: 700;
+        border: none;
+        padding: 1.25rem 1rem;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+    }
+    
+    .table tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #f5f5f5;
+    }
+    
+    .table tbody tr:hover {
+        background: linear-gradient(90deg, rgba(248, 230, 233, 0.4) 0%, rgba(248, 230, 233, 0.1) 100%);
+        transform: scale(1.01);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    
+    .company-name {
+        font-weight: 700;
+        color: var(--color-gris-oscuro);
+        font-size: 1.05rem;
+    }
+    
+    .company-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--color-burdeo-soft), #fce4e9);
+        color: var(--color-burdeo);
+        font-size: 1.2rem;
+        margin-right: 1rem;
+    }
+    
+    .badge-reportes {
+        background: linear-gradient(135deg, var(--color-burdeo-soft) 0%, #fce4e9 100%);
+        color: var(--color-burdeo);
+        font-weight: 700;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        border: 2px solid var(--color-burdeo);
+    }
+    
+    .badge-status {
+        padding: 0.4rem 0.9rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge-activo {
+        background: linear-gradient(135deg, #d4edda, #c3e6cb);
+        color: #155724;
+        border: 2px solid #28a745;
+    }
+    
+    .badge-inactivo {
+        background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+        color: #721c24;
+        border: 2px solid #dc3545;
+    }
+    
+    .info-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.75rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-right: 0.5rem;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+    
+    .info-tag:hover {
+        background: var(--color-burdeo-soft);
+        transform: scale(1.05);
+    }
+    
+    .info-tag i {
+        margin-right: 0.4rem;
+        color: var(--color-burdeo);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-2 fw-bold" style="color: var(--color-gris-oscuro);">
+                    <i class="bi bi-building-fill me-3" style="color: var(--color-burdeo);"></i>
+                    Gestión de Empresas
+                </h2>
+                
+            </div>
+            <a href="{% url 'clientes:crear_empresa' %}" class="btn btn-burdeo">
+                <i class="bi bi-plus-circle-fill me-2"></i>Nueva Empresa
+            </a>
+        </div>
+    </div>
+
+    <div class="search-box">
+        <form method="get">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-search" style="color: var(--color-burdeo); font-size: 1.2rem;"></i>
+                </span>
+                <input type="text" name="search" class="form-control" 
+                       placeholder="Buscar empresa por nombre, RUC, teléfono o email..." 
+                       value="{{ search_query }}">
+                <button class="btn btn-burdeo" type="submit" style="border-radius: 0 12px 12px 0;">
+                    <i class="bi bi-funnel-fill me-1"></i> Buscar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card table-card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Empresa</th>
+                            <th>RUC</th>
+                            <th>Información de Contacto</th>
+                            <th class="text-center">Reportes</th>
+                            <th class="text-center">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for empresa in empresas %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="company-icon">
+                                        <i class="bi bi-building-fill"></i>
+                                    </div>
+                                    <div>
+                                        <div class="company-name">{{ empresa.nombre }}</div>
+                                        {% if empresa.direccion %}
+                                        <small class="text-muted">
+                                            <i class="bi bi-geo-alt me-1"></i>{{ empresa.direccion|truncatechars:40 }}
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if empresa.ruc %}
+                                <span class="info-tag">
+                                    <i class="bi bi-card-text"></i>
+                                    {{ empresa.ruc }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    {% if empresa.telefono %}
+                                    <span class="info-tag">
+                                        <i class="bi bi-telephone-fill"></i>
+                                        {{ empresa.telefono }}
+                                    </span>
+                                    {% endif %}
+                                    {% if empresa.email %}
+                                    <span class="info-tag">
+                                        <i class="bi bi-envelope-fill"></i>
+                                        {{ empresa.email }}
+                                    </span>
+                                    {% endif %}
+                                    {% if not empresa.telefono and not empresa.email %}
+                                    <span class="text-muted">Sin contacto</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge-reportes">
+                                    <i class="bi bi-file-earmark-text me-1"></i>
+                                    {{ empresa.total_reportes }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if empresa.activo %}
+                                <span class="badge-status badge-activo">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Activo
+                                </span>
+                                {% else %}
+                                <span class="badge-status badge-inactivo">
+                                    <i class="bi bi-x-circle-fill me-1"></i>Inactivo
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <i class="bi bi-inbox" style="font-size: 4rem; color: #ddd; opacity: 0.5;"></i>
+                                <h5 class="text-muted mt-3">No se encontraron empresas</h5>
+                                <p class="text-muted">Intenta ajustar tu búsqueda o crea una nueva empresa</p>
+                                <a href="{% url 'clientes:crear_empresa' %}" class="btn btn-burdeo mt-2">
+                                    <i class="bi bi-plus-circle-fill me-2"></i>Crear Primera Empresa
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

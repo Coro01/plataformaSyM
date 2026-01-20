@@ -1,0 +1,913 @@
+{% load static %}{% url 'control_horas:main_dashboard' as main_dash_url %}{% url 'comercial:dashboard' as comercial_dash_url %}{% url 'rrhh:rrhh_dashboard' as rrhh_dash_url %}{% url 'rrhh:salarios' as salarios_dash_url %}{% url 'rrhh:vacaciones' as vacaciones_dash_url %}{% url 'control_horas:saldo_horas' as saldo_horas_dash_url %}{% url 'control_horas:calendario_horas' as calendario_horas_dash_url %}{% url 'control_horas:calendario_solicitudes' as calendario_solicitudes_dash_url %}{% url 'control_horas:gestion_solicitudes' as gestion_dash_url %}{% url 'control_horas:solicitar_dia_libre' as solicitar_dash_url %}{% url 'control_horas:upload_excel' as upload_dash_url %}{% url 'compras:compras_dashboard' as compras_dash_url %}{% url 'compras:crear_producto' as crear_dash_url %}{% url 'compras:deposito_dashboard' as depdashboard_dash_url %}{% url 'compras:deposito' as deposito_dash_url %}{% url 'compras:detalle_producto' as detalle_dash_url %}{% url 'compras:egreso_stock' as egreso_dash_url %}{% url 'compras:facturas' as facturas_dash_url %}{% url 'compras:importaciones' as importaciones_dash_url %}{% url 'compras:ingreso_stock' as ingreso_dash_url %}{% url 'compras:locales' as locales_dash_url %}{% url 'comercial:dashboard' as comercial_dash_url %}{% url 'comercial:clientes' as clientes_dash_url %}{% url 'comercial:pedidos' as pedidos_dash_url %}{% url 'comercial:reportes' as reportes_dash_url %}{% url 'clientes:dashboard' as clientes_dash_url %}{% url 'control_horas:login' as login_url %}{% url 'control_horas:logout_confirm' as logout_url %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}S&M Automation{% endblock %}</title>
+    
+    {# PWA Configuration #}
+    <link rel="manifest" href="{% static 'manifest/manifest.json' %}">
+    <meta name="theme-color" content="#800020"/> 
+    
+    {# Bootstrap CSS local #}
+    <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    {# Bootstrap Icons CSS local #}
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/css/bootstrap-icons.min.css' %}">
+    {# Google Fonts #}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {# Tailwind CSS #}
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    {% block stylesheets %}{% endblock %} 
+    {% block extra_head %}{% endblock %}
+    
+    <style>
+        :root {
+            --sm-accent-color: #800020;
+            --sm-accent-rgb: 128, 0, 32;
+            --sm-accent-hover: #600018;
+            --sm-accent-light: #f8e6e9;
+            
+            --sm-main-bg: #f5f7fa;
+            --sm-topbar-bg: #ffffff;
+            --sm-main-sidebar-bg: #800020;
+            --sm-context-sidebar-bg: #ffffff;
+            --sm-card-bg: #ffffff;
+            
+            --sm-text-dark: #1f2937;
+            --sm-text-muted: #6b7280;
+            --sm-text-main-sidebar: #ffffff;
+            
+            --sm-topbar-height: 70px;
+            --sm-main-sidebar-width: 75px;
+            --sm-context-sidebar-width: 260px;
+            --sm-border-color: #e5e7eb;
+            --smooth-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--sm-main-bg);
+            color: var(--sm-text-dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        #app-wrapper {
+            display: flex;
+            min-height: 100vh;
+            padding-top: var(--sm-topbar-height);
+        }
+        
+        /* === SIDEBAR PRINCIPAL === */
+        #main-sidebar {
+            width: var(--sm-main-sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: linear-gradient(180deg, var(--sm-main-sidebar-bg) 0%, #600018 100%);
+            z-index: 1040;
+            transition: var(--smooth-transition);
+            display: flex;
+            flex-direction: column;
+            padding-top: var(--sm-topbar-height);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        #main-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top left, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .sidebar-logo {
+            max-width: 45px;
+            max-height: 45px;
+            height: auto;
+            width: auto;
+            object-fit: contain;
+            position: relative;
+            z-index: 2;
+            display: block;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+            transition: var(--smooth-transition);
+        }
+        
+        .sidebar-logo:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .topbar-logo-container a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .main-nav-link {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 65px;
+            color: var(--sm-text-main-sidebar);
+            font-size: 1.5rem;
+            opacity: 0.7;
+            transition: var(--smooth-transition);
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .main-nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 45px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 0 8px 8px 0;
+            transition: var(--smooth-transition);
+        }
+        
+        .main-nav-link:hover {
+            opacity: 1;
+            color: var(--sm-text-main-sidebar);
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .main-nav-link:hover::before {
+            width: 5px;
+        }
+        
+        .main-nav-link i {
+            position: relative;
+            z-index: 1;
+            transition: var(--smooth-transition);
+        }
+        
+        .main-nav-link:hover i {
+            transform: scale(1.15);
+        }
+        
+        .active-main-link {
+            background: rgba(255,255,255,0.15);
+            color: var(--sm-text-main-sidebar) !important;
+            opacity: 1;
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.1);
+        }
+        
+        .active-main-link::before {
+            width: 5px;
+            background: white;
+        }
+        
+        /* === SIDEBAR CONTEXTUAL === */
+        #context-sidebar {
+            width: var(--sm-context-sidebar-width);
+            height: calc(100vh - var(--sm-topbar-height));
+            position: fixed;
+            top: var(--sm-topbar-height);
+            left: var(--sm-main-sidebar-width);
+            background-color: var(--sm-context-sidebar-bg);
+            border-right: 1px solid var(--sm-border-color);
+            z-index: 1030;
+            padding: 24px 16px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            transition: var(--smooth-transition);
+            transform: translateX(0);
+            box-shadow: 4px 0 16px rgba(0,0,0,0.04);
+        }
+        
+        #context-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #context-sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        #context-sidebar::-webkit-scrollbar-thumb {
+            background: var(--sm-accent-color);
+            border-radius: 10px;
+        }
+        
+        .contextual-heading {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--sm-text-muted);
+            padding: 16px 12px 8px 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            border-bottom: 2px solid var(--sm-accent-light);
+            margin-bottom: 8px;
+        }
+        
+        .context-nav-link {
+            padding: 12px 14px;
+            color: var(--sm-text-dark);
+            font-size: 0.95rem;
+            font-weight: 500;
+            border-radius: 10px;
+            transition: var(--smooth-transition);
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            margin-bottom: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .context-nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--sm-accent-color);
+            transform: scaleY(0);
+            transition: var(--smooth-transition);
+        }
+        
+        .context-nav-link i {
+            margin-right: 12px;
+            color: var(--sm-text-muted);
+            font-size: 1.1rem;
+            transition: var(--smooth-transition);
+        }
+        
+        .context-nav-link:hover {
+            background: linear-gradient(90deg, var(--sm-accent-light) 0%, rgba(248, 230, 233, 0.3) 100%);
+            color: var(--sm-accent-color);
+            transform: translateX(4px);
+        }
+        
+        .context-nav-link:hover::before {
+            transform: scaleY(1);
+        }
+        
+        .context-nav-link:hover i {
+            color: var(--sm-accent-color);
+            transform: scale(1.1);
+        }
+        
+        .active-context-link {
+            background: linear-gradient(135deg, var(--sm-accent-light) 0%, rgba(248, 230, 233, 0.5) 100%);
+            color: var(--sm-accent-color) !important;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(128, 0, 32, 0.1);
+        }
+        
+        .active-context-link::before {
+            transform: scaleY(1);
+        }
+        
+        .active-context-link i {
+            color: var(--sm-accent-color) !important;
+        }
+        
+        /* === TOPBAR === */
+        #topbar {
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            height: var(--sm-topbar-height);
+            background-color: var(--sm-topbar-bg);
+            z-index: 1040;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-right: 24px;
+            transition: var(--smooth-transition);
+            border-bottom: 1px solid var(--sm-border-color);
+        }
+        
+        .topbar-logo-container {
+            width: var(--sm-main-sidebar-width);
+            height: var(--sm-topbar-height);
+            background: linear-gradient(135deg, var(--sm-main-sidebar-bg) 0%, #600018 100%);
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            padding: 12px;
+            box-sizing: border-box;
+            position: relative;
+            box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+        }
+
+        .topbar-content {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-left: 24px;
+        }
+        
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--sm-text-dark);
+            font-size: 1.4rem;
+            padding: 8px 12px;
+            border-radius: 10px;
+            transition: var(--smooth-transition);
+            cursor: pointer;
+        }
+        
+        .toggle-btn:hover {
+            background: var(--sm-accent-light);
+            color: var(--sm-accent-color);
+        }
+
+        /* === CONTENIDO PRINCIPAL === */
+        #main-content-wrapper {
+            flex-grow: 1;
+            margin-left: var(--sm-main-sidebar-width);
+            transition: var(--smooth-transition);
+        }
+        
+        #main-content-container {
+            padding: 32px;
+            margin: 0 auto;
+            max-width: 1600px;
+        }
+        
+        .initial-margin-wrapper {
+            margin-left: 0 !important;
+            transition: var(--smooth-transition);
+            min-height: calc(100vh - var(--sm-topbar-height));
+        }
+
+        body.context-closed #context-sidebar {
+            transform: translateX(calc(var(--sm-context-sidebar-width) * -1));
+        }
+
+        body:not(.context-closed) #context-sidebar {
+            transform: translateX(0);
+        }
+        
+        body.context-closed #desktopContextToggleIcon:before {
+            content: "\f42e";
+        }
+        
+        body:not(.context-closed) #desktopContextToggleIcon:before {
+            content: "\f62a";
+        }
+        
+        /* === BREADCRUMBS === */
+        .page-breadcrumbs {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
+        }
+        
+        .breadcrumb {
+            margin: 0;
+            background: transparent;
+            padding: 0;
+        }
+        
+        .breadcrumb-item a {
+            color: var(--sm-accent-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--smooth-transition);
+        }
+        
+        .breadcrumb-item a:hover {
+            color: var(--sm-accent-hover);
+            text-decoration: underline;
+        }
+        
+        .breadcrumb-item.active {
+            color: var(--sm-text-muted);
+        }
+        
+        /* === PAGE HEADER === */
+        .page-header {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--sm-text-dark);
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 3px solid var(--sm-accent-light);
+            background: linear-gradient(90deg, var(--sm-accent-color), var(--sm-accent-hover));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* === USER DROPDOWN === */
+        .user-avatar {
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: var(--smooth-transition);
+        }
+        
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(128, 0, 32, 0.3);
+        }
+        
+        .dropdown-menu {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            padding: 8px;
+        }
+        
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 10px 16px;
+            transition: var(--smooth-transition);
+            font-weight: 500;
+        }
+        
+        .dropdown-item:hover {
+            background: var(--sm-accent-light);
+            color: var(--sm-accent-color);
+        }
+        
+        /* === ALERTS === */
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 16px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        /* === FOOTER === */
+        .app-footer {
+            background: white;
+            border-top: 1px solid var(--sm-border-color);
+            padding: 24px;
+            margin-top: 48px;
+        }
+        
+        /* === MOBILE === */
+        @media (max-width: 991px) {
+            #main-sidebar {
+                left: -75px;
+            }
+            
+            .topbar-logo-container {
+                display: none;
+            }
+            
+            #topbar {
+                left: 0;
+                width: 100%;
+            }
+            
+            .topbar-content {
+                padding-left: 12px;
+            }
+            
+            #context-sidebar {
+                width: 280px;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+                transform: translateX(-100%);
+            }
+            
+            #main-content-wrapper, .initial-margin-wrapper {
+                margin-left: 0 !important;
+            }
+            
+            body.sidebar-open #context-sidebar {
+                transform: translateX(0);
+            }
+            
+            .mobile-toggler {
+                display: block !important;
+            }
+            
+            .mobile-topbar-title {
+                display: block;
+                margin-left: 12px;
+                font-weight: 700;
+                font-size: 1.1rem;
+            }
+            
+            #main-content-container {
+                padding: 20px 16px;
+            }
+        }
+        
+        /* === ANIMACIONES === */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+    </style>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'sm-accent': 'var(--sm-accent-color)',
+                        'sm-main-bg': 'var(--sm-main-bg)',
+                        'sm-card-bg': 'var(--sm-card-bg)',
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+
+{% if "/rrhh/" in request.path or "/horas/" in request.path or "/compras/" in request.path or "/comercial/" in request.path or "/clientes/" in request.path %}{% if "/admin/" in request.path or request.path == main_dash_url %}<body class="context-closed">{% else %}<body>{% endif %}{% else %}<body class="context-closed">{% endif %}
+    
+    <div id="app-wrapper">
+            
+        {# === TOPBAR === #}
+        <header id="topbar">
+            
+            <div class="topbar-logo-container">
+                <a href="{{ main_dash_url }}" title="Inicio S&M">
+                    <img src="{% static 'img/logo-white.png' %}" alt="Logo S&M Automation" class="sidebar-logo">
+                </a>
+            </div>
+            
+            <div class="topbar-content">
+                
+                <div class="d-flex align-items-center">
+                    
+                    <button class="toggle-btn d-none d-lg-block" id="desktopContextToggle" type="button" aria-label="Toggle Context Sidebar">
+                        <i class="bi" id="desktopContextToggleIcon"></i>
+                    </button>
+                    
+                    <button class="toggle-btn d-lg-none" id="mobileSidebarToggle" type="button" aria-label="Toggle sidebar">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    
+                    <a class="mobile-topbar-title text-sm-text-dark d-lg-none" href="{{ main_dash_url }}">
+                        S&M <span style="color:var(--sm-accent-color)">Automation</span>
+                    </a>
+                </div>
+                
+                <ul class="navbar-nav ms-auto flex-row align-items-center">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item me-3 d-none d-md-block">
+                            <a class="nav-link text-sm-text-dark toggle-btn" href="#" aria-label="Notifications">
+                                <i class="bi bi-bell-fill"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center text-sm-text-dark" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=800020&color=ffffff&size=40&rounded=true" alt="Avatar" class="user-avatar me-2">
+                                <span class="d-none d-sm-inline fw-semibold text-sm-text-dark">{{ user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownUser">
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-person-fill me-2"></i> Mi Perfil</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-gear-fill me-2"></i> Configuración</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ logout_url }}">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="btn btn-primary fw-semibold" href="{{ login_url }}" style="background-color:var(--sm-accent-color); border-color:var(--sm-accent-color); border-radius: 10px; padding: 10px 20px;">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+
+            </div>
+
+        </header>
+        
+        {# === SIDEBAR PRINCIPAL === #}
+        <nav id="main-sidebar">
+            
+            <a class="main-nav-link {% if request.path == main_dash_url %}active-main-link{% endif %}" href="{{ main_dash_url }}" title="Inicio">
+                <i class="bi bi-house-door-fill"></i>
+            </a>
+            
+            {% if user.perfilempleado.nivel >= 5 %}
+            <a class="main-nav-link {% if "/rrhh/" in request.path and not request.path == main_dash_url %}active-main-link{% endif %}" href="{{ rrhh_dash_url }}" title="RRHH">
+                <i class="bi bi-people-fill"></i>
+            </a>
+            {% endif %}
+            
+            {% if user.perfilempleado.nivel >= 3 %}
+            <a class="main-nav-link {% if "/compras/" in request.path and not request.path == main_dash_url %}active-main-link{% endif %}" href="{{ compras_dash_url }}" title="Compras">     
+                <i class="bi bi-cart-fill"></i>
+            </a>
+            {% endif %}
+            
+            {% if user.perfilempleado.nivel >= 2 %}
+            <a class="main-nav-link {% if "/comercial/" in request.path and not request.path == main_dash_url %}active-main-link{% endif %}" href="{{ comercial_dash_url }}" title="Comercial"> 
+                <i class="bi bi-graph-up-arrow"></i>
+            </a>
+            {% endif %}
+
+            {% if user.perfilempleado.nivel >= 2 %}
+            <a class="main-nav-link {% if "/clientes/" in request.path and not request.path == main_dash_url %}active-main-link{% endif %}" href="{% url 'clientes:dashboard' %}" title="Clientes"> 
+                <i class="bi bi-person-vcard-fill"></i>
+            </a>
+            {% endif %}
+            
+            {% if user.is_staff or user.perfilempleado.nivel >= 5 %}
+            <a class="main-nav-link mt-auto {% if "/admin/" in request.path or "/config/" in request.path %}active-main-link{% endif %}" href="/admin/" title="Ajustes">
+                <i class="bi bi-sliders"></i>
+            </a>
+            {% endif %}
+
+        </nav>
+        
+        {# === SIDEBAR CONTEXTUAL === #}
+        <nav id="context-sidebar">
+            
+            {# RRHH Contexto #}
+            {% if "/rrhh/" in request.path and not "/admin/" in request.path and not request.path == main_dash_url %}
+                <div class="contextual-heading">
+                    <i class="bi bi-people-fill me-2"></i>Recursos Humanos
+                </div>
+                <a class="context-nav-link {% if request.path == rrhh_dash_url %}active-context-link{% endif %}" href="{{ rrhh_dash_url }}">
+                    <i class="bi bi-house-door-fill"></i> Dashboard
+                </a>
+                
+                <div class="contextual-heading">Salarios</div>
+                <a class="context-nav-link {% if request.path == salarios_dash_url %}active-context-link{% endif %}" href="{{ salarios_dash_url }}">
+                    <i class="bi bi-wallet-fill"></i> Gestión Salarios
+                </a>
+                
+                <div class="contextual-heading">Vacaciones</div>
+                <a class="context-nav-link {% if request.path == vacaciones_dash_url %}active-context-link{% endif %}" href="{{ vacaciones_dash_url }}">
+                    <i class="bi bi-airplane-fill"></i> Vacaciones
+                </a>
+                
+                <div class="contextual-heading">Control de Horas</div>
+                <a class="context-nav-link {% if request.path == saldo_horas_dash_url %}active-context-link{% endif %}" href="{{ saldo_horas_dash_url }}">
+                    <i class="bi bi-speedometer2"></i> Resumen
+                </a>
+                <a class="context-nav-link {% if request.path == calendario_horas_dash_url %}active-context-link{% endif %}" href="{{ calendario_horas_dash_url }}">
+                    <i class="bi bi-calendar-check-fill"></i> Calendario horas
+                </a>
+                <a class="context-nav-link {% if request.path == solicitar_dash_url %}active-context-link{% endif %}" href="{{ solicitar_dash_url }}">
+                    <i class="bi bi-calendar-plus-fill"></i> Solicitar horas
+                </a>
+
+                {% if user.perfilempleado.nivel >= 3 %}
+                <a class="context-nav-link {% if request.path == calendario_solicitudes_dash_url %}active-context-link{% endif %}" href="{{ calendario_solicitudes_dash_url }}">
+                    <i class="bi bi-calendar3"></i> Calendario solicitudes
+                </a>
+                <a class="context-nav-link {% if request.path == gestion_dash_url %}active-context-link{% endif %}" href="{{ gestion_dash_url }}">
+                    <i class="bi bi-clipboard-check-fill"></i> Gestión de solicitudes
+                </a>
+                {% endif %}
+
+                {% if user.perfilempleado.nivel >= 4 %}
+                <a class="context-nav-link {% if request.path == upload_dash_url %}active-context-link{% endif %}" href="{{ upload_dash_url }}">
+                    <i class="bi bi-file-earmark-arrow-up-fill"></i> Cargar registros
+                </a>
+                {% endif %}
+
+            {# Compras Contexto #}
+            {% elif "/compras/" in request.path and not "/admin/" in request.path %}
+                <div class="contextual-heading">
+                    <i class="bi bi-cart-fill me-2"></i>Compras
+                </div>
+                <a class="context-nav-link {% if request.path == compras_dash_url %}active-context-link{% endif %}" href="{{ compras_dash_url }}">
+                    <i class="bi bi-house-door-fill"></i> Dashboard
+                </a>
+                
+                <div class="contextual-heading">Operaciones</div>
+                <a class="context-nav-link {% if request.path == importaciones_dash_url %}active-context-link{% endif %}" href="{{ importaciones_dash_url }}">
+                    <i class="bi bi-globe-americas"></i> Importaciones
+                </a>
+                <a class="context-nav-link {% if request.path == locales_dash_url %}active-context-link{% endif %}" href="{{ locales_dash_url }}">
+                    <i class="bi bi-shop"></i> Compras locales
+                </a>
+                
+                <div class="contextual-heading">Depósito</div>
+                <a class="context-nav-link {% if request.path == ingreso_dash_url %}active-context-link{% endif %}" href="{{ ingreso_dash_url }}">
+                    <i class="bi bi-box-arrow-in-down-left"></i> Ingreso de productos
+                </a>
+                <a class="context-nav-link {% if request.path == egreso_dash_url %}active-context-link{% endif %}" href="{{ egreso_dash_url }}">
+                    <i class="bi bi-box-arrow-up-right"></i> Egreso de productos
+                </a>
+                <a class="context-nav-link {% if request.path == deposito_dash_url %}active-context-link{% endif %}" href="{{ deposito_dash_url }}">
+                    <i class="bi bi-boxes"></i> Inventario
+                </a>
+
+            {# Comercial Contexto #}
+            {% elif "/comercial/" in request.path and not "/admin/" in request.path %}
+                <div class="contextual-heading">
+                    <i class="bi bi-graph-up-arrow me-2"></i>Comercial
+                </div>
+                <a class="context-nav-link {% if request.path == comercial_dash_url %}active-context-link{% endif %}" href="{{ comercial_dash_url }}">
+                    <i class="bi bi-house-door-fill"></i> Dashboard
+                </a>
+                <a class="context-nav-link {% if request.path == clientes_dash_url %}active-context-link{% endif %}" href="{{ clientes_dash_url }}">
+                    <i class="bi bi-person-badge-fill"></i> Clientes
+                </a>
+                <a class="context-nav-link {% if request.path == pedidos_dash_url %}active-context-link{% endif %}" href="{{ pedidos_dash_url }}">
+                    <i class="bi bi-cart-check-fill"></i> Pedidos
+                </a>
+                <a class="context-nav-link {% if request.path == reportes_dash_url %}active-context-link{% endif %}" href="{{ reportes_dash_url }}">
+                    <i class="bi bi-bar-chart-fill"></i> Reportes
+                </a>
+
+            {# Clientes Contexto #}
+            {% elif "/clientes/" in request.path and not "/admin/" in request.path %}
+                <div class="contextual-heading">
+                    <i class="bi bi-person-vcard-fill me-2"></i>Clientes
+                </div>
+                <a class="context-nav-link {% if 'dashboard' in request.path %}active-context-link{% endif %}" href="{% url 'clientes:dashboard' %}">
+                    <i class="bi bi-house-door-fill"></i> Dashboard
+                </a>
+                
+                <div class="contextual-heading">Gestión</div>
+                <a class="context-nav-link {% if 'empresas' in request.path %}active-context-link{% endif %}" href="{% url 'clientes:empresas' %}">
+                    <i class="bi bi-building-fill"></i> Empresas
+                </a>
+                <a class="context-nav-link {% if 'asistencias' in request.path or 'reporte' in request.path %}active-context-link{% endif %}" href="{% url 'clientes:asistencias' %}">
+                    <i class="bi bi-file-earmark-medical-fill"></i> Reportes Técnicos
+                </a>
+                
+                <div class="contextual-heading">Archivos</div>
+                <a class="context-nav-link {% if 'documentos-red' in request.path %}active-context-link{% endif %}" href="{% url 'clientes:listar_documentos_red' %}">
+                    <i class="bi bi-hdd-network-fill"></i> Servidor (Y:)
+                </a>
+
+            {% else %}
+                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-center p-4">
+                    <i class="bi bi-info-circle text-sm-text-muted mb-3" style="font-size:2.5rem; opacity: 0.3;"></i>
+                    <p class="text-sm-text-muted small mb-0">Selecciona un módulo en la barra lateral para ver las opciones disponibles.</p>
+                </div>
+            {% endif %}
+
+        </nav>
+
+        {# === CONTENIDO PRINCIPAL === #}
+        <div id="main-content-wrapper">
+            
+            <div class="initial-margin-wrapper">
+                <div id="main-content-container">
+                    <main class="fade-in">
+
+                        {# BREADCRUMBS #}
+                        <div class="page-breadcrumbs">
+                            {% block horizontal_breadcrumbs %}
+                                <nav style="--bs-breadcrumb-divider: '›';" aria-label="breadcrumb">
+                                    <ol class="breadcrumb mb-0">
+                                        <li class="breadcrumb-item"><a href="{{ main_dash_url }}"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                                        
+                                        {% if "/rrhh/" in request.path %}
+                                            <li class="breadcrumb-item"><a href="{{ rrhh_dash_url }}">RRHH</a></li>
+                                        {% elif "/compras/" in request.path %}
+                                            <li class="breadcrumb-item"><a href="{{ compras_dash_url }}">Compras</a></li>
+                                        {% elif "/comercial/" in request.path %}
+                                            <li class="breadcrumb-item"><a href="{{ comercial_dash_url }}">Comercial</a></li>
+                                        {% elif "/clientes/" in request.path %}
+                                            <li class="breadcrumb-item"><a href="{% url 'clientes:dashboard' %}">Clientes</a></li>
+                                        {% elif "/admin/" in request.path or "/config/" in request.path %}
+                                            <li class="breadcrumb-item"><a href="/admin/">Ajustes</a></li>
+                                        {% endif %}
+                                        
+                                        <li class="breadcrumb-item active" aria-current="page">Página Actual</li>
+                                    </ol>
+                                </nav>
+                            {% endblock horizontal_breadcrumbs %}
+                        </div>
+                        
+                        {# TÍTULO #}
+                        <h1 class="page-header">{% block page_title %}{% endblock %}</h1> 
+                        
+                        {# MENSAJES #}
+                        {% block messages %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        {% endblock messages %}
+
+                        {% block pre_content %}{% endblock %}
+                        {% block content %}{% endblock %}
+                    </main>
+                </div>
+            </div>
+            
+            {# FOOTER #}
+            {% block footer %}
+            <footer class="app-footer text-center">
+                <div class="container-fluid">
+                    <small class="text-sm-text-muted">
+                        &copy; {% now "Y" %} S&M Automation S.A. · Todos los derechos reservados
+                    </small>
+                </div>
+            </footer>
+            {% endblock footer %}
+
+        </div>
+        
+    </div>
+
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+
+    <script>
+        function toggleDesktopContextSidebar(forceState) {
+            const body = document.body;
+            if (forceState !== undefined) {
+                body.classList.toggle('context-closed', !forceState);
+            } else {
+                body.classList.toggle('context-closed');
+            }
+        }
+        
+        const mobileToggle = document.getElementById('mobileSidebarToggle');
+        if (mobileToggle) {
+            mobileToggle.addEventListener('click', function() {
+                document.body.classList.toggle('sidebar-open');
+            });
+        }
+        
+        const desktopToggle = document.getElementById('desktopContextToggle');
+        if (desktopToggle) {
+            desktopToggle.addEventListener('click', function() {
+                toggleDesktopContextSidebar();
+            });
+        }
+
+        document.querySelectorAll('#main-sidebar a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const body = document.body;
+                if (window.innerWidth >= 992) { 
+                    if (!body.classList.contains('context-closed')) {
+                        if (this.classList.contains('active-main-link')) {
+                            e.preventDefault(); 
+                            toggleDesktopContextSidebar(false);
+                        }
+                    } else {
+                        toggleDesktopContextSidebar(true);
+                    }
+                }
+            });
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                const swPath = '{% static "sw.js" %}'; 
+                navigator.serviceWorker.register(swPath).then(function(reg) {
+                    console.log('Service worker registered.', reg);
+                }).catch(function(err) {
+                    console.error('Service worker registration failed:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+{% extends "control_horas/base.html" %}
+
+{% block title %}Gestión de Proveedores{% endblock %}
+
+{% block horizontal_breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'control_horas:main_dashboard' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'compras:compras_dashboard' %}">Compras</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Gestión de Proveedores</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block extra_head %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root { --burgundy: #7b2434; }
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07); 
+            padding: 1.5rem;
+        }
+        .header-title { color: var(--burgundy); font-weight: 700; }
+        .badge-activo { background-color: #dcfce7; color: #166534; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen py-8 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4">
+        
+        <!-- HEADER -->
+        <div class="flex justify-between items-center mb-8 pb-4 border-b-2 border-burgundy-main">
+            <div>
+                <h1 class="text-4xl font-bold header-title flex items-center gap-2">
+                    <i class="bi bi-building"></i> Gestión de Proveedores
+                </h1>
+                <p class="text-gray-600 mt-2">Administra los datos de tus proveedores para correlacionar automáticamente en facturas</p>
+            </div>
+            <a href="{% url 'compras:compras_dashboard' %}" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg font-semibold hover:bg-gray-400 transition">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+
+        <!-- MENSAJES -->
+        {% if messages %}
+            <div class="mb-6 space-y-2">
+                {% for message in messages %}
+                    <div class="p-4 rounded-lg text-center font-medium
+                        {% if message.tags == 'error' %}bg-red-100 border border-red-400 text-red-700
+                        {% elif message.tags == 'success' %}bg-green-100 border border-green-400 text-green-700
+                        {% else %}bg-blue-100 border border-blue-400 text-blue-700{% endif %}">
+                        <i class="bi {% if message.tags == 'error' %}bi-exclamation-circle{% elif message.tags == 'success' %}bi-check-circle{% else %}bi-info-circle{% endif %} mr-2"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- FORMULARIO AGREGAR PROVEEDOR -->
+            <div class="lg:col-span-1">
+                <div class="card sticky top-4">
+                    <h2 class="text-xl font-bold header-title mb-4 flex items-center gap-2">
+                        <i class="bi bi-plus-circle"></i> Nuevo Proveedor
+                    </h2>
+                    
+                    <form method="post" class="space-y-3">
+                        {% csrf_token %}
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">RUC *</label>
+                            <input type="text" 
+                                   name="ruc" 
+                                   placeholder="Ej: 80009334-8" 
+                                   required
+                                   pattern="\d{6}-\d"
+                                   class="input-sm w-full font-mono"
+                                   title="Formato: 12345678-9">
+                            <small class="text-gray-500">Formato: 12345678-9</small>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Nombre Empresa *</label>
+                            <input type="text" 
+                                   name="nombre" 
+                                   placeholder="Nombre completo" 
+                                   required
+                                   class="input-sm w-full">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                            <input type="email" 
+                                   name="email" 
+                                   placeholder="email@empresa.com"
+                                   class="input-sm w-full">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Teléfono</label>
+                            <input type="tel" 
+                                   name="telefono" 
+                                   placeholder="(021) 123-456"
+                                   class="input-sm w-full">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Dirección</label>
+                            <textarea name="direccion" 
+                                    placeholder="Dirección completa"
+                                    rows="2"
+                                    class="input-sm w-full"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Persona de Contacto</label>
+                            <input type="text" 
+                                   name="contacto" 
+                                   placeholder="Nombre del contacto"
+                                   class="input-sm w-full">
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-burgundy text-white font-bold py-2.5 rounded-lg hover:opacity-90 transition mt-4 flex items-center justify-center gap-2">
+                            <i class="bi bi-save"></i> Guardar Proveedor
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- LISTA DE PROVEEDORES CON BÚSQUEDA -->
+            <div class="lg:col-span-2">
+                <div class="card mb-4">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="bi bi-search text-gray-400"></i>
+                        <input type="text" 
+                               id="buscar_proveedor"
+                               placeholder="Buscar por RUC o nombre..."
+                               class="input-sm flex-1 bg-gray-50"
+                               style="border: 1px solid #e5e7eb;">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="text-xl font-bold header-title mb-4 flex items-center gap-2">
+                        <i class="bi bi-list-check"></i> Proveedores Registrados
+                        <span class="text-sm font-normal text-gray-500">{{ proveedores|length }}</span>
+                    </h2>
+                    
+                    {% if proveedores %}
+                        <div class="space-y-3" id="lista_proveedores">
+                            {% for proveedor in proveedores %}
+                            <div class="proveedor-card" data-ruc="{{ proveedor.ruc }}" data-nombre="{{ proveedor.nombre|lower }}">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex-1">
+                                        <div class="font-bold text-gray-900 flex items-center gap-2">
+                                            {{ proveedor.nombre }}
+                                            <span class="badge-activo">✓ Activo</span>
+                                        </div>
+                                        <div class="text-sm text-gray-600 font-mono mt-1">
+                                            <i class="bi bi-code-square"></i> RUC: {{ proveedor.ruc }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm mt-3 pt-3 border-t border-gray-100">
+                                    {% if proveedor.email %}
+                                        <div class="text-gray-600">
+                                            <i class="bi bi-envelope text-burgundy mr-1"></i> 
+                                            <span class="font-medium">{{ proveedor.email }}</span>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if proveedor.telefono %}
+                                        <div class="text-gray-600">
+                                            <i class="bi bi-telephone text-burgundy mr-1"></i> 
+                                            <span class="font-medium">{{ proveedor.telefono }}</span>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if proveedor.contacto %}
+                                        <div class="text-gray-600">
+                                            <i class="bi bi-person text-burgundy mr-1"></i> 
+                                            <span class="font-medium">{{ proveedor.contacto }}</span>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if proveedor.direccion %}
+                                        <div class="text-gray-600">
+                                            <i class="bi bi-geo-alt text-burgundy mr-1"></i> 
+                                            <span class="font-medium">{{ proveedor.direccion|truncatewords:5 }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                                    <form method="post" action="{% url 'compras:eliminar_proveedor' proveedor.ruc %}" 
+                                          onsubmit="return confirm('¿Desactivar este proveedor?');"
+                                          class="flex-1">
+                                        {% csrf_token %}
+                                        <button type="submit" class="w-full text-red-600 hover:text-red-800 hover:bg-red-50 text-sm font-semibold py-1.5 rounded transition flex items-center justify-center gap-2">
+                                            <i class="bi bi-trash"></i> Desactivar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Mensaje sin resultados -->
+                        <div id="sin-resultados" class="text-center py-12 text-gray-500" style="display: none;">
+                            <i class="bi bi-search text-4xl block mb-3 text-gray-300"></i>
+                            <p>No se encontraron proveedores</p>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-12 text-gray-500">
+                            <i class="bi bi-inbox text-4xl block mb-3 text-gray-300"></i>
+                            <p>No hay proveedores registrados</p>
+                            <p class="text-sm mt-2">Agrega uno usando el formulario de la izquierda</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- INSTRUCCIONES -->
+        <div class="card mt-8 bg-blue-50 border-l-4 border-blue-500">
+            <h3 class="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
+                <i class="bi bi-info-circle"></i> Cómo Funciona
+            </h3>
+            <ul class="text-sm text-blue-800 space-y-2">
+                <li>✓ Registra los datos de tus proveedores con su RUC</li>
+                <li>✓ Cuando cargues una factura, el sistema busca el RUC automáticamente</li>
+                <li>✓ Si encuentra coincidencia, utiliza el nombre, email y teléfono registrados</li>
+                <li>✓ Si no encuentra coincidencia, crea un proveedor temporal que puedes editar después</li>
+                <li>✓ Usa el buscador para encontrar rápidamente un proveedor por RUC o nombre</li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    const buscarInput = $('#buscar_proveedor');
+    const listaProveedores = $('#lista_proveedores');
+    const sinResultados = $('#sin-resultados');
+
+    // Búsqueda en tiempo real
+    buscarInput.on('keyup', function() {
+        const filtro = $(this).val().toLowerCase().trim();
+        let resultados = 0;
+
+        if (listaProveedores.length > 0) {
+            $('.proveedor-card').each(function() {
+                const ruc = $(this).data('ruc').toLowerCase();
+                const nombre = $(this).data('nombre').toLowerCase();
+                
+                if (ruc.includes(filtro) || nombre.includes(filtro) || filtro === '') {
+                    $(this).show();
+                    resultados++;
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            // Mostrar/ocultar mensaje de sin resultados
+            if (resultados === 0 && filtro !== '') {
+                sinResultados.show();
+            } else {
+                sinResultados.hide();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

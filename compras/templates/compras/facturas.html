@@ -1,0 +1,640 @@
+{% extends "control_horas/base.html" %}
+{% load humanize %}
+
+{% block title %}Gestión de Facturas | Sistema de Compras{% endblock %}
+
+{% block extra_head %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <style>
+        :root { --burgundy: #800020; }
+        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .glass-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 1.5rem; }
+        .select2-container--default .select2-selection--single { border: 1px solid #d1d5db !important; height: 42px !important; border-radius: 8px !important; }
+        .select2-dropdown { border: 1px solid #e2e8f0 !important; border-radius: 8px !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important; }
+        .btn-action { padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-add { background-color: #10b981; color: white; }
+        .btn-add:hover { background-color: #059669; }
+        .btn-remove { background-color: #ef4444; color: white; }
+        .btn-remove:hover { background-color: #dc2626; }
+        .product-row { padding: 1rem; background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 1rem; }
+        .input-sm { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; }
+        
+        /* Estilos para tabs */
+        .tab-button { 
+            padding: 0.75rem 1.5rem; 
+            font-weight: 600; 
+            border: none; 
+            background-color: #f3f4f6;
+            color: #6b7280;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: 0.2s;
+            margin-right: 0.5rem;
+        }
+        .tab-button.active { 
+            background-color: white; 
+            color: var(--burgundy);
+            border-bottom: 3px solid var(--burgundy);
+        }
+        .tab-button:hover { 
+            background-color: #e5e7eb; 
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="mb-4 p-4 rounded-lg flex items-center gap-3 {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% elif message.tags == 'warning' %}bg-yellow-50 text-yellow-700 border border-yellow-200{% else %}bg-green-50 text-green-700 border border-green-200{% endif %}">
+                <i class="bi {% if message.tags == 'error' %}bi-exclamation-circle{% elif message.tags == 'warning' %}bi-exclamation-triangle{% else %}bi-check-circle{% endif %}"></i>
+                <span>{{ message|safe }}</span>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- COLUMNA IZQUIERDA: CARGA PDF O MANUAL -->
+        <div class="lg:col-span-4 space-y-6">
+            
+            <!-- TABS PARA SELECCIONAR MODO -->
+            <div class="glass-card border-t-4 border-t-burgundy">
+                <div class="flex gap-2 mb-6 border-b border-gray-200 -m-6 mb-6 px-6 pt-6">
+                    <button class="tab-button active" data-tab="pdf-tab">
+                        <i class="bi bi-file-earmark-pdf"></i> Cargar PDF
+                    </button>
+                    <button class="tab-button" data-tab="manual-tab">
+                        <i class="bi bi-pencil-square"></i> Ingreso Manual
+                    </button>
+                </div>
+
+                <!-- TAB 1: CARGA PDF -->
+                <div id="pdf-tab" class="tab-content active">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="bi bi-cloud-arrow-up" style="color: var(--burgundy);"></i> 
+                        Cargar Factura PDF
+                    </h3>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="relative group mb-4">
+                            <input type="file" name="factura_file" id="factura_file" accept="application/pdf" 
+                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center group-hover:border-burgundy group-hover:bg-gray-50 transition-colors bg-gray-50">
+                                <i class="bi bi-file-earmark-pdf text-4xl text-gray-400 mb-2 block"></i>
+                                <p class="text-sm font-medium text-gray-700">Haz clic o arrastra el PDF</p>
+                                <p class="text-xs text-gray-500 mt-1">Se extraerá: Nro. Factura + RUC</p>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full" style="background-color: var(--burgundy); color: white; font-weight: 600; padding: 0.75rem; border-radius: 8px; cursor: pointer;">
+                            <i class="bi bi-lightning-charge-fill"></i> Analizar Factura
+                        </button>
+                    </form>
+                </div>
+
+                <!-- TAB 2: INGRESO MANUAL -->
+                <div id="manual-tab" class="tab-content">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="bi bi-pencil-square" style="color: var(--burgundy);"></i> 
+                        Ingresar Datos Manualmente
+                    </h3>
+
+                    <form id="formManualFactura" method="post" action="/SYM/compras/facturas/manual/" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="space-y-4">
+                            <!-- Número de Factura -->
+                            <div>
+                                <label class="text-sm font-bold text-gray-700 block mb-2">Número de Factura *</label>
+                                <input type="text" 
+                                       name="numero_factura_manual"
+                                       id="numero_factura_manual"
+                                       class="input-sm w-full bg-white"
+                                       placeholder="Ej: 001-001-0000001"
+                                       required>
+                            </div>
+
+                            <!-- RUC del Proveedor -->
+                            <div>
+                                <label class="text-sm font-bold text-gray-700 block mb-2">RUC del Proveedor *</label>
+                                <input type="text" 
+                                       name="ruc_manual"
+                                       id="ruc_manual"
+                                       class="input-sm w-full bg-white"
+                                       placeholder="Ej: 80123456-7"
+                                       required>
+                            </div>
+
+                            <!-- Fecha de Emisión -->
+                            <div>
+                                <label class="text-sm font-bold text-gray-700 block mb-2">Fecha de Emisión *</label>
+                                <input type="date" 
+                                       name="fecha_emision_manual"
+                                       id="fecha_emision_manual"
+                                       class="input-sm w-full bg-white"
+                                       required>
+                            </div>
+
+                            <!-- Foto/Imagen de la Factura (Opcional) -->
+                            <div>
+                                <label class="text-sm font-bold text-gray-700 block mb-2">Foto de la Factura (Opcional)</label>
+                                <p class="text-xs text-gray-500 mb-2">Sube una foto o imagen de la factura como respaldo</p>
+                                <div class="relative group">
+                                    <input type="file" 
+                                           name="factura_imagen_manual"
+                                           id="factura_imagen_manual"
+                                           accept="image/*,.pdf"
+                                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center group-hover:border-burgundy group-hover:bg-gray-50 transition-colors bg-gray-50">
+                                        <i class="bi bi-image text-2xl text-gray-400 mb-2 block"></i>
+                                        <p class="text-sm font-medium text-gray-700">Haz clic o arrastra la imagen</p>
+                                        <p class="text-xs text-gray-500 mt-1">JPG, PNG, PDF (Máx. 5MB)</p>
+                                    </div>
+                                </div>
+                                <!-- Nombre del archivo seleccionado -->
+                                <div id="archivo-cargado" class="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 hidden">
+                                    <i class="bi bi-check-circle"></i> Archivo: <strong id="nombre-archivo"></strong>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full" style="background-color: var(--burgundy); color: white; font-weight: 600; padding: 0.75rem; border-radius: 8px; cursor: pointer;">
+                                <i class="bi bi-check-circle"></i> Cargar Factura
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if latest_pdf_url %}
+            <div class="glass-card">
+                <h4 class="text-sm font-bold text-gray-600 mb-3">Vista Previa PDF</h4>
+                <div class="rounded-lg overflow-hidden border border-gray-200 bg-gray-100" style="height: 350px;">
+                    <iframe src="{{ latest_pdf_url }}" class="w-full h-full"></iframe>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- COLUMNA DERECHA: DATOS Y PRODUCTOS -->
+        <div class="lg:col-span-8">
+           {% if factura_datos_basicos and proveedor_encontrado %}
+            <form id="productsForm" method="post" action="/SYM/compras/facturas/guardar/">
+                {% csrf_token %}
+                <input type="hidden" name="factura_id" value="{{ request.session.factura_actual_id }}">
+
+                <!-- ========== DATOS DE LA FACTURA ========== -->
+                <div class="glass-card border-l-4" style="border-left-color: var(--burgundy); margin-bottom: 1.5rem;">
+                    <h4 class="font-bold text-gray-700 mb-3">Información de la Factura</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <p class="text-xs font-bold text-gray-500 uppercase">Factura Nº</p>
+                            <p class="text-lg font-mono font-bold text-gray-800">{{ factura_datos_basicos.numero_factura }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-500 uppercase">RUC</p>
+                            <p class="text-sm font-mono font-bold" style="color: var(--burgundy);">{{ factura_datos_basicos.ruc_proveedor }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== FORMULARIO EDITABLE DEL PROVEEDOR ========== -->
+                <div class="glass-card border-t-4 border-t-green-500 mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="bi bi-building" style="color: #10b981;"></i>
+                        Datos del Proveedor (Editable)
+                    </h3>
+
+                    <div class="bg-blue-50 p-3 rounded-lg mb-4 text-sm text-blue-700 border border-blue-200">
+                        <i class="bi bi-info-circle"></i> Edita los datos del proveedor si es necesario. Se guardarán en la base de datos.
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Nombre (OBLIGATORIO) -->
+                        <div class="md:col-span-2">
+                            <label class="text-sm font-bold text-gray-700 block mb-2">Nombre de la Empresa *</label>
+                            <input type="text" 
+                                name="nombre_proveedor" 
+                                id="nombre_proveedor"
+                                class="input-sm w-full bg-white" 
+                                value="{{ proveedor_datos.nombre }}"
+                                placeholder="Nombre del proveedor"
+                                required>
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label class="text-sm font-bold text-gray-700 block mb-2">Email</label>
+                            <input type="email" 
+                                name="email_proveedor"
+                                id="email_proveedor"
+                                class="input-sm w-full bg-white" 
+                                value="{{ proveedor_datos.email }}"
+                                placeholder="correo@proveedor.com">
+                        </div>
+
+                        <!-- Teléfono -->
+                        <div>
+                            <label class="text-sm font-bold text-gray-700 block mb-2">Teléfono</label>
+                            <input type="text" 
+                                name="telefono_proveedor"
+                                id="telefono_proveedor"
+                                class="input-sm w-full bg-white" 
+                                value="{{ proveedor_datos.telefono }}"
+                                placeholder="+595 XXX XXXX">
+                        </div>
+
+                        <!-- Persona de Contacto -->
+                        <div>
+                            <label class="text-sm font-bold text-gray-700 block mb-2">Persona de Contacto</label>
+                            <input type="text" 
+                                name="contacto_proveedor"
+                                id="contacto_proveedor"
+                                class="input-sm w-full bg-white" 
+                                value="{{ proveedor_datos.contacto }}"
+                                placeholder="Nombre del contacto">
+                        </div>
+
+                        <!-- Dirección -->
+                        <div class="md:col-span-2">
+                            <label class="text-sm font-bold text-gray-700 block mb-2">Dirección</label>
+                            <textarea name="direccion_proveedor"
+                                    id="direccion_proveedor"
+                                    class="input-sm w-full bg-white" 
+                                    rows="2"
+                                    placeholder="Dirección completa">{{ proveedor_datos.direccion }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== SELECCIÓN DE PRODUCTOS ========== -->
+                <div class="glass-card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="bi bi-box-seam" style="color: var(--burgundy);"></i>
+                        Seleccionar Productos
+                    </h3>
+
+                    <div id="productsContainer">
+                        <!-- Las filas de productos se agregarán aquí -->
+                    </div>
+
+                    <button type="button" id="btnAddProduct" class="btn-action btn-add w-full">
+                        <i class="bi bi-plus-circle"></i> Agregar Producto
+                    </button>
+                </div>
+
+                <!-- ========== BOTONES DE ACCIÓN ========== -->
+                <div class="flex gap-3 mt-6 sticky bottom-4 bg-white/80 backdrop-blur p-4 rounded-lg shadow-lg">
+                    <a href="{% url 'compras:facturas' %}" class="flex-1 px-4 py-3 text-center font-bold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                        Cancelar
+                    </a>
+                    <button type="submit" id="btnSubmit" class="flex-1 px-4 py-3 font-bold text-white rounded-lg transition flex items-center justify-center gap-2" style="background-color: #10b981;">
+                        <i class="bi bi-check2-circle"></i> Confirmar Ingreso
+                    </button>
+                </div>
+            </form>
+
+        {% else %}
+            <div class="glass-card text-center py-16">
+                <i class="bi bi-file-earmark-arrow-up text-5xl text-gray-300 block mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-700 mb-2">Carga una Factura para comenzar</h3>
+                <p class="text-gray-500 text-sm">Puedes usar PDF automático o ingresar los datos de forma manual.</p>
+            </div>
+        {% endif %}
+        </div>
+    </div>
+
+    <!-- HISTORIAL DE FACTURAS CON BÚSQUEDA -->
+    <div class="mt-12">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <i class="bi bi-clock-history" style="color: var(--burgundy);"></i> 
+                Historial de Facturas
+            </h3>
+            
+            <!-- BUSCADOR DE FACTURAS -->
+            <div class="w-full md:w-auto">
+                <input type="text" 
+                       id="buscar_factura"
+                       placeholder="Buscar por nº de factura..."
+                       class="input-sm w-full md:w-64 bg-white"
+                       style="border: 1px solid #d1d5db;">
+            </div>
+        </div>
+
+        <div class="glass-card overflow-x-auto">
+            <table class="w-full text-sm" id="tabla_facturas">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-bold text-gray-600">Factura</th>
+                        <th class="px-4 py-3 text-left font-bold text-gray-600">Proveedor</th>
+                        <th class="px-4 py-3 text-left font-bold text-gray-600">Fecha</th>
+                        <th class="px-4 py-3 text-right font-bold text-gray-600">Total</th>
+                        <th class="px-4 py-3 text-center font-bold text-gray-600">Estado</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for factura in facturas_list %}
+                    <tr class="hover:bg-gray-50 factura-row" data-factura="{{ factura.numero_factura }}">
+                        <td class="px-4 py-3 font-mono font-bold text-gray-700">{{ factura.numero_factura }}</td>
+                        <td class="px-4 py-3 text-gray-700">{{ factura.proveedor.nombre }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ factura.fecha_emision|date:"d/m/Y" }}</td>
+                        <td class="px-4 py-3 text-right font-bold text-gray-800">₲ {{ factura.monto_total|floatformat:0|intcomma }}</td>
+                        <td class="px-4 py-3 text-center space-x-2">
+                            {% if factura.estado == 'procesada' %}
+                                <span class="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">✅ Procesada</span>
+                                {% if factura.pdf_registro %}
+                                <div class="inline-flex gap-2 mt-1">
+                                    <a href="{% url 'compras:ver_factura_pdf' factura.id %}" target="_blank" title="Ver PDF" class="text-blue-600 hover:text-blue-800 transition text-sm font-bold">
+                                        <i class="bi bi-eye-fill"></i> Ver
+                                    </a>
+                                    <a href="{% url 'compras:descargar_factura_pdf' factura.id %}" title="Descargar PDF" class="text-green-600 hover:text-green-800 transition text-sm font-bold">
+                                        <i class="bi bi-download"></i> Descargar
+                                    </a>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <span class="inline-block px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">⏳ Pendiente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                            No hay facturas registradas aún.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mensaje cuando no hay resultados en búsqueda -->
+        <div id="sin-resultados" class="glass-card text-center py-8 text-gray-500 mt-4" style="display: none;">
+            <i class="bi bi-search text-3xl text-gray-300 mb-2 block"></i>
+            <p>No se encontraron facturas que coincidan con la búsqueda</p>
+        </div>
+    </div>
+</div>
+
+<!-- TEMPLATE PARA FILA DE PRODUCTO -->
+<template id="productRowTemplate">
+    <div class="product-row" data-row-index="1">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+            <!-- Seleccionar Producto -->
+            <div class="md:col-span-5">
+                <label class="text-xs font-bold text-gray-600 block mb-2">Producto del Inventario *</label>
+                <select class="product-select w-full" required>
+                    <option value="">Busca un producto...</option>
+                    {% for producto in productos_disponibles %}
+                        <option value="{{ producto.CodigoProducto }}" 
+                                data-nombre="{{ producto.Producto }}" 
+                                data-marca="{{ producto.Marca|default:'N/A' }}"
+                                data-modelo="{{ producto.Modelo|default:'N/A' }}"
+                                data-precio="{{ producto.PrecioGS }}">
+                            [{{ producto.CodigoProducto }}] {{ producto.Producto }}
+                            {% if producto.Marca %}({{ producto.Marca }}{% if producto.Modelo %} / {{ producto.Modelo }}{% endif %}){% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Cantidad -->
+            <div class="md:col-span-2">
+                <label class="text-xs font-bold text-gray-600 block mb-2">Cantidad *</label>
+                <input type="number" step="0.01" min="0.01" class="input-sm w-full cantidad-input" required placeholder="1">
+            </div>
+
+            <!-- Precio Unitario -->
+            <div class="md:col-span-3">
+                <label class="text-xs font-bold text-gray-600 block mb-2">Precio Unitario (GS) *</label>
+                <input type="number" step="0.01" min="0" class="input-sm w-full precio-input" required placeholder="0">
+            </div>
+
+            <!-- Botón Eliminar -->
+            <div class="md:col-span-2">
+                <button type="button" class="btn-action btn-remove w-full">
+                    <i class="bi bi-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+$(document).ready(function() {
+    let rowCounter = 0;
+
+    // ========== SISTEMA DE TABS ==========
+    $('.tab-button').on('click', function() {
+        const tabId = $(this).data('tab');
+        
+        // Remover clase active de todos
+        $('.tab-button').removeClass('active');
+        $('.tab-content').removeClass('active');
+        
+        // Agregar active al clickeado
+        $(this).addClass('active');
+        $(`#${tabId}`).addClass('active');
+    });
+
+    // ========== MANEJO DE ARCHIVO EN INGRESO MANUAL ==========
+    $('#factura_imagen_manual').on('change', function(e) {
+        const archivo = e.target.files[0];
+        if (archivo) {
+            const nombreArchivo = archivo.name;
+            const tamano = (archivo.size / 1024).toFixed(2);
+            
+            // Mostrar nombre del archivo
+            $('#nombre-archivo').text(`${nombreArchivo} (${tamano} KB)`);
+            $('#archivo-cargado').removeClass('hidden');
+            
+            // Mostrar vista previa si es PDF o imagen
+            mostrarPreviewLocal(archivo);
+        }
+    });
+
+    function mostrarPreviewLocal(archivo) {
+        const tipoArchivo = archivo.type;
+        const extensiones = archivo.name.split('.').pop().toLowerCase();
+        
+        // Crear elemento de vista previa si no existe
+        if ($('#preview-manual').length === 0) {
+            const previewHTML = `
+                <div id="preview-manual" class="glass-card mt-6">
+                    <h4 class="text-sm font-bold text-gray-600 mb-3">Vista Previa</h4>
+                    <div class="rounded-lg overflow-hidden border border-gray-200 bg-gray-100" style="height: 350px;">
+                        <div id="contenido-preview" class="w-full h-full flex items-center justify-center"></div>
+                    </div>
+                </div>
+            `;
+            
+            // Insertar después del formulario manual
+            $('#formManualFactura').after(previewHTML);
+        }
+        
+        const contenidoPreview = $('#contenido-preview');
+        contenidoPreview.empty();
+        
+        // Si es PDF
+        if (extensiones === 'pdf') {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const pdfUrl = e.target.result;
+                contenidoPreview.html(`<iframe src="${pdfUrl}" class="w-full h-full"></iframe>`);
+            };
+            reader.readAsDataURL(archivo);
+        }
+        // Si es imagen
+        else if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(extensiones)) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgUrl = e.target.result;
+                contenidoPreview.html(`
+                    <img src="${imgUrl}" class="w-full h-full object-contain" />
+                `);
+            };
+            reader.readAsDataURL(archivo);
+        }
+        // Archivo no soportado
+        else {
+            contenidoPreview.html(`
+                <div class="text-center text-gray-500 p-8">
+                    <i class="bi bi-exclamation-circle text-3xl mb-2 block"></i>
+                    <p>Formato no soportado: .${extensiones}</p>
+                    <p class="text-xs mt-2">Soportados: PDF, JPG, PNG, GIF</p>
+                </div>
+            `);
+        }
+    }
+
+    // ========== BÚSQUEDA DE FACTURAS ==========
+    const buscarFacturaInput = $('#buscar_factura');
+    const sinResultados = $('#sin-resultados');
+
+    buscarFacturaInput.on('keyup', function() {
+        const filtro = $(this).val().toLowerCase().trim();
+        let filasVisibles = 0;
+
+        $('.factura-row').each(function() {
+            const numeroFactura = $(this).data('factura').toLowerCase();
+            
+            if (numeroFactura.includes(filtro) || filtro === '') {
+                $(this).show();
+                filasVisibles++;
+            } else {
+                $(this).hide();
+            }
+        });
+
+        if (filasVisibles === 0 && filtro !== '') {
+            sinResultados.show();
+        } else {
+            sinResultados.hide();
+        }
+    });
+
+    // ========== SELECT2 Y DATOS DE PRODUCTOS ==========
+    function initSelect2(select) {
+        if (!select.hasClass('select2-hidden-accessible')) {
+            select.select2({
+                placeholder: "Busca un producto...",
+                allowClear: false,
+                width: '100%'
+            });
+        }
+    }
+
+    // Agregar fila de producto
+    $('#btnAddProduct').on('click', function() {
+        rowCounter++;
+        const template = document.getElementById('productRowTemplate');
+        const newRow = template.content.cloneNode(true);
+        
+        const rowDiv = newRow.querySelector('.product-row');
+        rowDiv.setAttribute('data-row-index', rowCounter);
+        
+        // Cambiar nombres de inputs
+        newRow.querySelectorAll('input, select').forEach(el => {
+            if (el.classList.contains('product-select')) {
+                el.name = `producto_id_${rowCounter}`;
+            } else if (el.classList.contains('cantidad-input')) {
+                el.name = `cantidad_${rowCounter}`;
+            } else if (el.classList.contains('precio-input')) {
+                el.name = `precio_unitario_${rowCounter}`;
+            }
+        });
+
+        // Botón eliminar
+        newRow.querySelector('.btn-remove').addEventListener('click', function(e) {
+            e.preventDefault();
+            rowDiv.remove();
+        });
+
+        document.getElementById('productsContainer').appendChild(newRow);
+        
+        // Inicializar Select2
+        const newSelect = rowDiv.querySelector('.product-select');
+        initSelect2($(newSelect));
+    });
+
+    // Cargar precio automáticamente
+    $(document).on('change', '.product-select', function() {
+        const selectedPrice = $(this).find(':selected').data('precio');
+        const row = $(this).closest('.product-row');
+        if (selectedPrice) {
+            row.find('.precio-input').val(selectedPrice);
+        }
+    });
+
+    // Validación del formulario de productos
+    $('#productsForm').on('submit', function(e) {
+        let hasProducts = false;
+        let isValid = true;
+
+        $('.product-row').each(function() {
+            const productoId = $(this).find('select').val();
+            const cantidad = $(this).find('.cantidad-input').val();
+            const precio = $(this).find('.precio-input').val();
+
+            if (productoId && cantidad && precio) {
+                hasProducts = true;
+            }
+
+            if (productoId || cantidad || precio) {
+                if (!productoId || !cantidad || !precio) {
+                    isValid = false;
+                }
+            }
+        });
+
+        if (!hasProducts) {
+            e.preventDefault();
+            alert('❌ Debes agregar al menos un producto.');
+            return false;
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            alert('❌ Completa todos los campos de los productos agregados.');
+            return false;
+        }
+
+        const btn = $('#btnSubmit');
+        btn.html('<i class="bi bi-hourglass-split animate-spin"></i> Procesando...').prop('disabled', true);
+    });
+
+    // Si hay factura en sesión, agregar una fila
+    if (factura_datos_basicos){
+        $('#btnAddProduct').click();
+    }
+});
+</script>
+{% endblock %}

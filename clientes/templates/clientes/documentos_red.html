@@ -1,0 +1,373 @@
+{% extends "control_horas/base.html" %}
+
+{% block title %}Explorador de Red{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root { 
+        --color-burdeo: #800020; 
+        --color-burdeo-soft: #f8e6e9; 
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    }
+    
+    .explorer-card {
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        overflow: hidden;
+        background: white;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, var(--color-burdeo) 0%, #600018 100%);
+        border: none;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .card-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .card-header h5 {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .header-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    
+    .breadcrumb-explorer {
+        background: linear-gradient(135deg, #f8f9fa, #ffffff);
+        border: 2px solid #e9ecef;
+        padding: 1.25rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    
+    .breadcrumb {
+        margin: 0;
+        background: transparent;
+        padding: 0;
+    }
+    
+    .breadcrumb-item a {
+        color: var(--color-burdeo);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+    }
+    
+    .breadcrumb-item a:hover {
+        background: var(--color-burdeo-soft);
+        transform: translateX(3px);
+    }
+    
+    .breadcrumb-item.active {
+        color: #6c757d;
+        font-weight: 600;
+    }
+    
+    .file-row { 
+        transition: all 0.3s ease; 
+        border-left: 3px solid transparent;
+        border-bottom: 1px solid #f5f5f5;
+    }
+    
+    .file-row:hover { 
+        background: linear-gradient(90deg, var(--color-burdeo-soft) 0%, rgba(248, 230, 233, 0.3) 100%);
+        border-left: 3px solid var(--color-burdeo);
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .icon-folder { 
+        color: #ffca28;
+        font-size: 2rem;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        transition: all 0.3s ease;
+    }
+    
+    .file-row:hover .icon-folder {
+        transform: scale(1.15);
+    }
+    
+    .icon-pdf { 
+        color: #e53935;
+        font-size: 2rem;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        transition: all 0.3s ease;
+    }
+    
+    .file-row:hover .icon-pdf {
+        transform: scale(1.15);
+    }
+    
+    .icon-file {
+        color: #6c757d;
+        font-size: 2rem;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        transition: all 0.3s ease;
+    }
+    
+    .file-row:hover .icon-file {
+        transform: scale(1.15);
+    }
+    
+    .table thead th {
+        background: linear-gradient(135deg, var(--color-burdeo-soft) 0%, #fce4e9 100%);
+        color: #4a4a4a;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        padding: 1.25rem 1rem;
+        border: none;
+    }
+    
+    .file-name {
+        font-weight: 600;
+        color: #2c3e50;
+        transition: all 0.3s ease;
+    }
+    
+    .file-row:hover .file-name {
+        color: var(--color-burdeo);
+    }
+    
+    .badge-size {
+        background: linear-gradient(135deg, #e9ecef, #f8f9fa);
+        color: #6c757d;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+    }
+    
+    .btn-action {
+        border-radius: 10px;
+        padding: 0.5rem 1.25rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: 2px solid;
+    }
+    
+    .btn-outline-dark {
+        border-color: var(--color-burdeo);
+        color: var(--color-burdeo);
+    }
+    
+    .btn-outline-dark:hover {
+        background: var(--color-burdeo);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(128, 0, 32, 0.3);
+    }
+    
+    .btn-light {
+        background: #f8f9fa;
+        border-color: #e9ecef;
+        color: #495057;
+    }
+    
+    .btn-light:hover {
+        background: var(--color-burdeo-soft);
+        border-color: var(--color-burdeo);
+        color: var(--color-burdeo);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .back-row {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        font-weight: 600;
+    }
+    
+    .back-row:hover {
+        background: linear-gradient(90deg, #e9ecef, #dee2e6);
+    }
+    
+    .back-icon {
+        color: var(--color-burdeo);
+        font-size: 1.5rem;
+    }
+    
+    .card-footer {
+        background: linear-gradient(135deg, #f8f9fa, #ffffff);
+        border-top: 2px solid var(--color-burdeo-soft);
+        padding: 1.5rem;
+    }
+    
+    .btn-dark {
+        background: linear-gradient(135deg, #343a40, #23272b);
+        border: none;
+        border-radius: 10px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    .btn-dark:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    
+    .table-responsive {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card explorer-card">
+        <div class="card-header">
+            <h5 class="text-white fw-bold">
+                <div class="header-icon">
+                    <i class="bi bi-hdd-network-fill"></i>
+                </div>
+                <div>
+                    <div>Unidad Y: (\\Nassmauto\Data)</div>
+                    <small style="opacity: 0.9; font-weight: 400; font-size: 0.85rem;">
+                        Explorador de archivos de red
+                    </small>
+                </div>
+            </h5>
+        </div>
+
+        <div class="card-body p-4">
+            <nav aria-label="breadcrumb">
+                <div class="breadcrumb-explorer">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="?p=">
+                                <i class="bi bi-house-door-fill me-1"></i>Raíz
+                            </a>
+                        </li>
+                        {% for parte in subruta_partes %}
+                            <li class="breadcrumb-item active" aria-current="page">
+                                <i class="bi bi-folder-fill me-1"></i>{{ parte }}
+                            </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </nav>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4" style="width: 80px;">Tipo</th>
+                            <th>Nombre</th>
+                            <th style="width: 150px;">Tamaño</th>
+                            <th class="text-end pe-4" style="width: 180px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if subruta %}
+                        <tr class="file-row back-row">
+                            <td class="ps-4 text-center">
+                                <i class="bi bi-arrow-90deg-up back-icon"></i>
+                            </td>
+                            <td colspan="3">
+                                <a href="?p={{ ruta_padre }}" class="text-decoration-none fw-bold d-flex align-items-center" style="color: var(--color-burdeo);">
+                                    <i class="bi bi-arrow-left-circle me-2"></i>
+                                    Volver al directorio anterior
+                                </a>
+                            </td>
+                        </tr>
+                        {% endif %}
+
+                        {% for item in items %}
+                        <tr class="file-row">
+                            <td class="ps-4 text-center">
+                                {% if item.es_dir %}
+                                    <i class="bi bi-folder-fill icon-folder"></i>
+                                {% elif ".pdf" in item.nombre|lower %}
+                                    <i class="bi bi-file-pdf-fill icon-pdf"></i>
+                                {% else %}
+                                    <i class="bi bi-file-earmark-text-fill icon-file"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.es_dir %}
+                                    <a href="?p={{ item.ruta_relativa }}" class="file-name text-decoration-none">
+                                        {{ item.nombre }}
+                                    </a>
+                                {% else %}
+                                    <span class="file-name">{{ item.nombre }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not item.es_dir %}
+                                    <span class="badge-size">
+                                        <i class="bi bi-file-earmark me-1"></i>{{ item.tamaño }} KB
+                                    </span>
+                                {% else %}
+                                    <small class="text-muted">
+                                        <i class="bi bi-folder me-1"></i>Carpeta
+                                    </small>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                {% if not item.es_dir %}
+                                    <a href="{% url 'clientes:ver_documento_red' item.ruta_relativa %}" 
+                                       class="btn btn-sm btn-action btn-outline-dark" 
+                                       target="_blank">
+                                        <i class="bi bi-eye-fill me-1"></i>Abrir
+                                    </a>
+                                {% else %}
+                                    <a href="?p={{ item.ruta_relativa }}" 
+                                       class="btn btn-sm btn-action btn-light">
+                                        <i class="bi bi-folder-open me-1"></i>Explorar
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card-footer text-center">
+            <a href="{% url 'clientes:dashboard' %}" class="btn btn-dark">
+                <i class="bi bi-house-door-fill me-2"></i>Volver al Panel Principal
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

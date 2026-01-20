@@ -1,0 +1,242 @@
+{% extends "control_horas/base.html" %}
+
+{% load static %} 
+
+{% block title %}Recursos Humanos{% endblock %}
+
+{% block horizontal_breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'control_horas:main_dashboard' %}">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">RRHH</li>
+    </ol>
+</nav>
+{% endblock horizontal_breadcrumbs %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* --- V17: ESTILO ELEGANCIA CORPORATIVA (BORGOÑA Y GRIS) --- */
+        
+        :root {
+            --accent-burgundy: #800020; /* Color Principal: Borgoña */
+            --bg-gradient-start: #F7F7F7; /* Gris Muy Suave */
+            --bg-gradient-end: #FFFFFF;  /* Blanco */
+            --text-main: #212529;        /* Negro/Gris Carbón */
+            --text-secondary: #495057;   /* Gris oscuro profesional */
+            --border-light: #E0E0E0;     /* Borde gris claro */
+        }
+
+        /* AJUSTES GLOBALES */
+        body {
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            font-family: 'Open Sans', 'Inter', sans-serif;
+            min-height: 100vh;
+            /* Nota: Eliminamos display: flex, flex-direction: column y justify-content: center 
+               para evitar conflicto con el bloque base.html y para el breadcrumb. */
+        }
+        
+        /* Contenedor principal */
+        .main-content-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        /* SECCIÓN HÉROE */
+        .hero-section-v17 {
+            text-align: center;
+            padding: 4rem 2rem;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 3rem;
+        }
+
+        .hero-title-v17 {
+            color: var(--accent-burgundy);
+            font-weight: 800;
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+
+        .hero-subtitle-v17 {
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto 2rem auto;
+        }
+        
+        /* TARJETAS DE ACCESO CON FONDO VISUAL */
+        .module-card-v17 {
+            background-color: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 2.5rem 1.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text-main);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            justify-content: space-between;
+        }
+
+        .module-card-v17:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(128, 0, 32, 0.15); /* Sombra con toque Borgoña */
+            border-color: var(--accent-burgundy);
+        }
+
+        /* Icono de fondo como marca de agua (Borgoña muy tenue) */
+        .module-card-background-icon {
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            font-size: 12rem;
+            color: rgba(128, 0, 32, 0.05); /* Borgoña muy tenue */
+            z-index: 0;
+            line-height: 1;
+            transform: rotate(-15deg);
+            transition: color 0.3s ease;
+        }
+        
+        .module-card-v17:hover .module-card-background-icon {
+            color: rgba(128, 0, 32, 0.1); /* Se intensifica al pasar el ratón */
+        }
+
+        .card-content-v17 {
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-main-icon-v17 {
+            font-size: 3rem;
+            color: var(--accent-burgundy); /* Icono principal en Borgoña */
+            margin-bottom: 1rem;
+        }
+        
+        .card-title-v17 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--text-main);
+        }
+
+        .card-description-v17 {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+        
+        /* BOTÓN DE ACCESO */
+        .btn-access-v17 {
+            background-color: var(--accent-burgundy);
+            border: none;
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(128, 0, 32, 0.3); /* Sombra Borgoña en botón */
+        }
+
+        .btn-access-v17:hover {
+            background-color: #6a001a; /* Borgoña oscuro */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(128, 0, 32, 0.4);
+        }
+
+        /* RESPONSIVE (Asegurando compatibilidad) */
+        @media (max-width: 992px) {
+            .hero-title-v17 {
+                font-size: 2.5rem;
+            }
+            .module-card-background-icon {
+                font-size: 8rem;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-15deg);
+            }
+        }
+        @media (max-width: 576px) {
+            .hero-title-v17 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+{% endblock %} 
+
+{% block content %}
+<div class="main-content-wrapper">
+
+    <section class="hero-section-v17">
+        <h1 class="hero-title-v17">PANEL DE RECURSOS HUMANOS</h1>
+        <p class="hero-subtitle-v17">
+            Gestione las operaciones relacionadas con RRHH.
+        </p>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        {# MÓDULO 1: GESTIÓN DE NÓMINAS #}
+        <a href="{% url 'rrhh:salarios' %}" class="module-card-v17">
+            <span class="module-card-background-icon"><i class="bi bi-currency-dollar"></i></span>
+            <div class="card-content-v17">
+                <i class="bi bi-cash-stack card-main-icon-v17"></i>
+                <h3 class="card-title-v17">GESTIÓN DE NÓMINAS</h3>
+                <p class="card-description-v17">
+                    Cálculo, liquidación y registro de nóminas, salarios y beneficios del personal.
+                </p>
+                <button class="btn-access-v17">
+                    IR A SALARIOS <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </a>
+
+        {# MÓDULO 2: VACACIONES Y AUSENCIAS #}
+        <a href="{% url 'rrhh:vacaciones' %}" class="module-card-v17">
+            <span class="module-card-background-icon"><i class="bi bi-airplane-fill"></i></span>
+            <div class="card-content-v17">
+                <i class="bi bi-calendar2-week card-main-icon-v17"></i>
+                <h3 class="card-title-v17">VACACIONES Y AUSENCIAS</h3>
+                <p class="card-description-v17">
+                    Administración de solicitudes de vacaciones, saldos disponibles y permisos especiales.
+                </p>
+                <button class="btn-access-v17">
+                    IR A SOLICITUDES <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </a>
+
+        {# MÓDULO 3: REPORTE DE JORNADAS #}
+        <a href="{% url 'control_horas:saldo_horas' %}" class="module-card-v17">
+            <span class="module-card-background-icon"><i class="bi bi-clock-history"></i></span>
+            <div class="card-content-v17">
+                <i class="bi bi-clipboard-data card-main-icon-v17"></i>
+                <h3 class="card-title-v17">REPORTE DE JORNADAS</h3>
+                <p class="card-description-v17">
+                    Visualización, administración y reportes detallados de fichajes y saldos de horas.
+                </p>
+                <button class="btn-access-v17">
+                    IR A REPORTES <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </a>
+        
+    </div>
+    
+</div>
+{% endblock content %}

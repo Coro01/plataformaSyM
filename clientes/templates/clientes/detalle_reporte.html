@@ -1,0 +1,396 @@
+{% extends "control_horas/base.html" %}
+{% load static %}
+
+{% block title %}Detalle de Reporte - {{ reporte.numero_reporte }}{% endblock %}
+{% block page_title %}Detalle de Reporte de Asistencia{% endblock %}
+
+{% block horizontal_breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'control_horas:main_dashboard' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'clientes:dashboard' %}">Clientes</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'clientes:asistencias' %}">Asistencias</a></li>
+        <li class="breadcrumb-item active">{{ reporte.numero_reporte }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root { 
+        --color-burdeo: #800020; 
+        --color-burdeo-soft: #f8e6e9; 
+        --color-gris-oscuro: #4a4a4a; 
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    }
+    
+    .info-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        background: white;
+        overflow: hidden;
+    }
+    
+    .info-card .card-header {
+        background: linear-gradient(135deg, white 0%, #f8f9fa 100%);
+        border-bottom: 3px solid var(--color-burdeo-soft);
+        font-weight: 700;
+        color: var(--color-burdeo);
+        padding: 1.5rem;
+    }
+    
+    .box-reportado {
+        background: linear-gradient(135deg, #f8f9fa, #ffffff);
+        border-left: 5px solid #6c757d;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .box-reportado:hover {
+        transform: translateX(5px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+
+    .box-diagnostico {
+        background: linear-gradient(135deg, #fff5f5, #ffe5e5);
+        border-left: 5px solid #dc3545;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .box-diagnostico:hover {
+        transform: translateX(5px);
+        box-shadow: 0 6px 20px rgba(220, 53, 69, 0.2);
+    }
+    
+    .box-solucion {
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        border-left: 5px solid #10b981;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .box-solucion:hover {
+        transform: translateX(5px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.2);
+    }
+    
+    .badge-numero-reporte {
+        background: linear-gradient(135deg, var(--color-burdeo) 0%, #600018 100%);
+        color: white;
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        box-shadow: 0 4px 12px rgba(128, 0, 32, 0.3);
+        letter-spacing: 1px;
+    }
+    
+    .archivo-card {
+        transition: all 0.3s ease;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        overflow: hidden;
+        background: white;
+    }
+    
+    .archivo-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+        border-color: var(--color-burdeo);
+    }
+    
+    .archivo-card .card-img-top {
+        height: 180px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    }
+    
+    .pdf-icon-box {
+        height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #fff5f5, #ffe5e5);
+    }
+    
+    .stat-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        font-weight: 600;
+        margin-right: 1rem;
+        background: linear-gradient(135deg, var(--color-burdeo-soft), #fce4e9);
+        color: var(--color-burdeo);
+        border: 2px solid var(--color-burdeo);
+    }
+    
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 1.25rem;
+        transition: all 0.3s ease;
+    }
+    
+    .list-group-item:hover {
+        background: linear-gradient(90deg, var(--color-burdeo-soft), rgba(248, 230, 233, 0.3));
+        transform: translateX(5px);
+    }
+    
+    .btn-action {
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 0.875rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        border: none;
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+    
+    .btn-danger:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(220, 53, 69, 0.5);
+    }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, #ffc107, #e0a800);
+        border: none;
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+    }
+    
+    .btn-warning:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(255, 193, 7, 0.5);
+    }
+    
+    .btn-outline-secondary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 0.75rem;
+    }
+    
+    .empty-state {
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+    
+    .empty-state i {
+        font-size: 5rem;
+        color: #ddd;
+        margin-bottom: 1.5rem;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card info-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <div class="section-icon" style="background: linear-gradient(135deg, var(--color-burdeo-soft), #fce4e9);">
+                            <i class="bi bi-file-earmark-text-fill" style="color: var(--color-burdeo);"></i>
+                        </div>
+                        Informe del Servicio Técnico
+                    </h5>
+                    <span class="badge-numero-reporte">{{ reporte.numero_reporte }}</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="text-muted small fw-bold text-uppercase mb-2" style="letter-spacing: 1px;">
+                                <i class="bi bi-cpu-fill me-1" style="color: var(--color-burdeo);"></i>
+                                Equipo Atendido
+                            </label>
+                            <p class="h5 fw-bold mb-0" style="color: var(--color-gris-oscuro);">{{ reporte.maquina }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small fw-bold text-uppercase mb-2" style="letter-spacing: 1px;">
+                                <i class="bi bi-calendar-event-fill me-1" style="color: var(--color-burdeo);"></i>
+                                Fecha del Servicio
+                            </label>
+                            <p class="h5 fw-bold mb-0" style="color: var(--color-burdeo);">
+                                {{ reporte.fecha_asistencia|date:"d/m/Y" }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3 d-flex align-items-center" style="color: #6c757d;">
+                            <div class="section-icon" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                                <i class="bi bi-chat-left-quote-fill text-secondary"></i>
+                            </div>
+                            REPORTE INICIAL DEL CLIENTE
+                        </h6>
+                        <div class="box-reportado">
+                            <p class="mb-0" style="line-height: 1.8;">{{ reporte.problema|linebreaksbr }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3 d-flex align-items-center text-danger">
+                            <div class="section-icon" style="background: linear-gradient(135deg, #fff5f5, #ffe5e5);">
+                                <i class="bi bi-search text-danger"></i>
+                            </div>
+                            DIAGNÓSTICO TÉCNICO (HALLAZGO REAL)
+                        </h6>
+                        <div class="box-diagnostico">
+                            <p class="mb-0 fw-bold" style="line-height: 1.8; font-size: 1.05rem;">{{ reporte.problema_encontrado|linebreaksbr }}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h6 class="fw-bold mb-3 d-flex align-items-center text-success">
+                            <div class="section-icon" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+                                <i class="bi bi-check-all text-success"></i>
+                            </div>
+                            SOLUCIÓN Y TRABAJOS REALIZADOS
+                        </h6>
+                        <div class="box-solucion">
+                            <p class="mb-0" style="line-height: 1.8;">{{ reporte.solucion|linebreaksbr }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card info-card">
+                <div class="card-header">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <div class="section-icon" style="background: linear-gradient(135deg, #d1ecf1, #bee5eb);">
+                            <i class="bi bi-camera-fill text-info"></i>
+                        </div>
+                        Evidencias y Documentos Adjuntos
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if reporte.archivos.all %}
+                    <div class="row g-4">
+                        {% for adjunto in reporte.archivos.all %}
+                        <div class="col-md-4">
+                            <div class="card archivo-card h-100">
+                                {% if adjunto.tipo == 'pdf' %}
+                                <div class="pdf-icon-box">
+                                    <i class="bi bi-file-earmark-pdf-fill text-danger" style="font-size: 4rem;"></i>
+                                </div>
+                                <div class="card-body">
+                                    <p class="small text-muted mb-0">
+                                        <i class="bi bi-file-text me-1"></i>
+                                        {{ adjunto.descripcion|default:"Documento PDF" }}
+                                    </p>
+                                </div>
+                                {% else %}
+                                <img src="{{ adjunto.archivo.url }}" class="card-img-top" alt="Evidencia">
+                                <div class="card-body">
+                                    <p class="small text-muted mb-0">
+                                        <i class="bi bi-image me-1"></i>
+                                        {{ adjunto.descripcion|default:"Fotografía de evidencia" }}
+                                    </p>
+                                </div>
+                                {% endif %}
+                                <div class="card-footer bg-white border-0 d-flex justify-content-between p-3">
+                                    <a href="{{ adjunto.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">
+                                        <i class="bi bi-eye me-1"></i>Ver
+                                    </a>
+                                    <a href="{{ adjunto.archivo.url }}" download class="btn btn-sm btn-outline-secondary" style="border-radius: 8px;">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p class="text-muted mb-0">No se adjuntaron archivos a este reporte</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card info-card">
+                <div class="card-header" style="background: linear-gradient(135deg, #d4edda, #c3e6cb);">
+                    <h5 class="mb-0 text-success">
+                        <i class="bi bi-printer-fill me-2"></i>Exportar Documento
+                    </h5>
+                </div>
+                <div class="card-body text-center p-4">
+                    <a href="{% url 'clientes:reporte_pdf' reporte.pk %}" target="_blank" class="btn btn-danger w-100 py-3 mb-3">
+                        <i class="bi bi-file-pdf-fill me-2"></i>Generar PDF Oficial
+                    </a>
+                    <small class="text-muted d-block">
+                        <i class="bi bi-info-circle me-1"></i>
+                        El PDF incluye todas las fotos y anexos
+                    </small>
+                </div>
+            </div>
+
+            <div class="card info-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle-fill me-2"></i>Detalles del Registro
+                    </h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <small class="text-muted d-block mb-1 fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">CLIENTE</small>
+                        <span class="fw-bold text-dark">{{ reporte.empresa.nombre }}</span>
+                    </li>
+                    <li class="list-group-item">
+                        <small class="text-muted d-block mb-1 fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">SOLICITANTE</small>
+                        <span class="text-dark">{{ reporte.persona_solicita }}</span>
+                    </li>
+                    <li class="list-group-item">
+                        <small class="text-muted d-block mb-1 fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">TÉCNICO ASIGNADO</small>
+                        <span class="text-dark">{{ reporte.usuario.get_full_name|default:reporte.usuario.username }}</span>
+                    </li>
+                    <li class="list-group-item">
+                        <small class="text-muted d-block mb-1 fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">REGISTRADO EL</small>
+                        <span class="text-dark">{{ reporte.fecha_generacion|date:"d/m/Y H:i" }}</span>
+                    </li>
+                </ul>
+                <div class="card-footer bg-white py-3">
+                    <a href="{% url 'clientes:editar_reporte' reporte.pk %}" class="btn btn-warning w-100 mb-2 btn-action">
+                        <i class="bi bi-pencil-fill me-2"></i>Editar Reporte
+                    </a>
+                    <a href="{% url 'clientes:asistencias' %}" class="btn btn-outline-secondary w-100 btn-action">
+                        <i class="bi bi-arrow-left me-2"></i>Volver al Listado
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

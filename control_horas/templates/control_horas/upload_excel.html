@@ -1,0 +1,282 @@
+{% extends "control_horas/base.html" %}
+{% load widget_tweaks %}
+{% load static %} 
+
+{% block title %}Cargar Informe de Jornadas{% endblock %}
+
+{% block extra_head %}
+    <style>
+        /* ========================================= */
+        /* ESTILOS UNIFICADOS - CARGAR REGISTROS */
+        /* ========================================= */
+
+        /* --- TÍTULO PRINCIPAL UNIFICADO --- */
+        .page-main-title {
+            color: #1f2937;
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .page-main-title i {
+            color: #800020;
+        }
+
+        /* --- CARDS UNIFICADAS --- */
+        .upload-card {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .upload-card-header {
+            background-color: #800020;
+            color: #ffffff;
+            padding: 1rem 1.25rem;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .upload-card-header i {
+            margin-right: 0.5rem;
+        }
+
+        .upload-card-body {
+            padding: 2rem;
+        }
+
+        /* --- FORMULARIOS UNIFICADOS --- */
+        .form-label {
+            color: #1f2937;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            border: 2px dashed #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            background-color: #f8f8f8;
+        }
+
+        .form-control:hover {
+            border-color: #800020;
+            background-color: #ffffff;
+        }
+
+        .form-control:focus {
+            border-color: #800020;
+            border-style: solid;
+            box-shadow: 0 0 0 0.2rem rgba(128, 0, 32, 0.15);
+            background-color: #ffffff;
+        }
+
+        .form-text {
+            background-color: #f8f8f8;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border-left: 4px solid #800020;
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.75rem;
+        }
+
+        /* --- BOTONES UNIFICADOS --- */
+        .btn-primary {
+            background-color: #800020;
+            border-color: #800020;
+            color: #ffffff;
+            font-weight: 600;
+            padding: 0.875rem 1.5rem;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: #6a001a;
+            border-color: #6a001a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(128, 0, 32, 0.3);
+        }
+
+        .btn-primary i {
+            font-size: 1.2rem;
+        }
+
+        /* --- ALERTAS UNIFICADAS --- */
+        .alert {
+            border-radius: 8px;
+            border: none;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .alert-heading {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .alert-success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .alert-success .alert-heading {
+            color: #0f5132;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+
+        .alert-danger .alert-heading {
+            color: #842029;
+        }
+
+        .alert-info {
+            background-color: #e7f3ff;
+            color: #055160;
+        }
+
+        .alert ul {
+            margin-bottom: 0;
+            padding-left: 1.5rem;
+        }
+
+        .alert ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .alert ul li:last-child {
+            margin-bottom: 0;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .page-main-title {
+                font-size: 1.5rem;
+            }
+
+            .upload-card-body {
+                padding: 1.5rem;
+            }
+
+            .btn-primary {
+                padding: 0.75rem 1.25rem;
+            }
+        }
+    </style>
+{% endblock %} 
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            
+            {# TÍTULO PRINCIPAL UNIFICADO #}
+            <h1 class="page-main-title">
+                <i class="bi bi-file-earmark-arrow-up"></i>
+                Cargar registros
+            </h1>
+
+            {# MENSAJES DE DJANGO #}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}" role="alert">
+                        <h5 class="alert-heading">
+                            {% if message.tags == 'success' %}
+                                ✅ Carga Exitosa
+                            {% elif message.tags == 'error' %}
+                                ⚠️ Error
+                            {% else %}
+                                ℹ️ Aviso
+                            {% endif %}
+                        </h5>
+                        <p class="mb-0">{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {# MENSAJES DE ERROR #}
+            {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    <h5 class="alert-heading">⚠️ Error en la Carga</h5>
+                    <ul>
+                    {% for msg in error %}
+                        <li>{{ msg }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            {# CARD DE UPLOAD #}
+            <div class="upload-card">
+                <div class="upload-card-header">
+                    <i class="bi bi-upload"></i>Seleccionar Archivo (CSV/Excel)
+                </div>
+                <div class="upload-card-body">
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        {% for field in form %}
+                            <div class="mb-4">
+                                <label for="{{ field.id_for_label }}" class="form-label">
+                                    {{ field.label }}:
+                                </label>
+                                
+                                {% render_field field class="form-control" %}
+
+                                {% if field.help_text %}
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-2"></i>{{ field.help_text }}
+                                    </div>
+                                {% endif %}
+
+                                {% for error in field.errors %}
+                                    <div class="text-danger small mt-2">
+                                        <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+
+                        {# BOTÓN DE SUBMIT #}
+                        <button type="submit" class="btn btn-primary w-100 mt-3">
+                            <i class="bi bi-cloud-upload-fill me-2"></i>Procesar Archivo
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# SCRIPT DE VALIDACIÓN #}
+    <script>
+        (function () {
+            'use strict'
+
+            const forms = document.querySelectorAll('.needs-validation')
+
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+{% endblock %}

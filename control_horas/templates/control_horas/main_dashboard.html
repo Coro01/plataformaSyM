@@ -1,0 +1,356 @@
+{% extends "control_horas/base.html" %}
+{% load static %}
+
+{% block title %}Dashboard Principal - S&M Automation{% endblock %}
+{% block page_title %}{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        --sm-accent: #800020;
+        --sm-accent-light: #f8e6e9;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    }
+    
+    .welcome-section {
+        background: white;
+        border-radius: 20px;
+        padding: 3rem;
+        margin-bottom: 3rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .welcome-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(128, 0, 32, 0.05) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    
+    .welcome-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--sm-accent), #600018);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+    
+    .welcome-subtitle {
+        font-size: 1.1rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    .modules-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .module-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        border: 2px solid transparent;
+        text-decoration: none;
+        display: block;
+    }
+    
+    .module-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, var(--sm-accent), #600018);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+    }
+    
+    .module-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .module-card::after {
+        content: '';
+        position: absolute;
+        top: -100%;
+        right: -100%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(128, 0, 32, 0.05) 0%, transparent 60%);
+        transition: all 0.6s ease;
+    }
+    
+    .module-card:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 20px 60px rgba(128, 0, 32, 0.2);
+        border-color: var(--sm-accent-light);
+    }
+    
+    .module-card:hover::after {
+        top: -50%;
+        right: -50%;
+    }
+    
+    .module-icon-container {
+        width: 90px;
+        height: 90px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, var(--sm-accent-light) 0%, rgba(248, 230, 233, 0.5) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        position: relative;
+        z-index: 1;
+        transition: all 0.4s ease;
+    }
+    
+    .module-card:hover .module-icon-container {
+        transform: scale(1.1) rotate(5deg);
+        background: linear-gradient(135deg, var(--sm-accent), #600018);
+    }
+    
+    .module-icon {
+        font-size: 2.5rem;
+        color: var(--sm-accent);
+        transition: all 0.4s ease;
+    }
+    
+    .module-card:hover .module-icon {
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .module-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.75rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .module-description {
+        font-size: 0.95rem;
+        color: #6b7280;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .module-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.875rem 1.75rem;
+        background: linear-gradient(135deg, var(--sm-accent), #600018);
+        color: white;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 4px 15px rgba(128, 0, 32, 0.3);
+    }
+    
+    .module-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(128, 0, 32, 0.5);
+        color: white;
+    }
+    
+    .module-btn i {
+        margin-left: 0.5rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .module-btn:hover i {
+        transform: translateX(5px);
+    }
+    
+    .stats-banner {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-top: 3rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        border-right: 1px solid #e5e7eb;
+    }
+    
+    .stat-item:last-child {
+        border-right: none;
+    }
+    
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--sm-accent), #600018);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .modules-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .welcome-section {
+            padding: 2rem;
+        }
+        
+        .welcome-title {
+            font-size: 2rem;
+        }
+        
+        .stats-banner {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-item {
+            border-right: none;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .floating {
+        animation: float 3s ease-in-out infinite;
+    }
+</style>
+{% endblock %}
+
+{% block horizontal_breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div class="welcome-section">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            
+            <h1 class="welcome-title">
+                Bienvenido, {{ user.get_full_name|default:user.username }}
+            </h1>
+            <p class="welcome-subtitle">
+                Panel de gestión centralizado de S&M Automation · Sistema integrado de gestión empresarial
+            </p>
+        </div>
+        <div class="col-lg-4 text-end d-none d-lg-block">
+            <img src="{% static 'img/logo-white.png' %}" alt="S&M Logo" class="floating" style="max-width: 220px; opacity: 1;">
+        </div>
+    </div>
+</div>
+
+<div class="modules-grid">
+    
+    {# Módulo Compras #}
+    {% if user.perfilempleado.nivel >= 3 %}
+    <div class="module-card">
+        <div class="module-icon-container">
+            <i class="bi bi-cart-fill module-icon"></i>
+        </div>
+        <h2 class="module-title">Compras</h2>
+        <p class="module-description">
+            Gestione proveedores, pedidos de compra, y el inventario de su almacén de forma centralizada.
+        </p>
+        <a href="{% url 'compras:compras_dashboard' %}" class="module-btn">
+            ACCEDER <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    {% endif %}
+    
+    {# Módulo Recursos Humanos #}
+    {% if user.perfilempleado.nivel >= 5 %}
+    <div class="module-card">
+        <div class="module-icon-container">
+            <i class="bi bi-people-fill module-icon"></i>
+        </div>
+        <h2 class="module-title">Recursos Humanos</h2>
+        <p class="module-description">
+            Controle la jornada laboral, fichajes, vacaciones y toda la gestión del personal.
+        </p>
+        <a href="{% url 'rrhh:rrhh_dashboard' %}" class="module-btn">
+            ACCEDER <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    {% endif %}
+    
+    {# Módulo Comercial #}
+    {% if user.perfilempleado.nivel >= 2 %}
+    <div class="module-card">
+        <div class="module-icon-container">
+            <i class="bi bi-graph-up-arrow module-icon"></i>
+        </div>
+        <h2 class="module-title">Comercial</h2>
+        <p class="module-description">
+            Administre ventas, clientes, presupuestos, y el proceso de facturación comercial.
+        </p>
+        <a href="{% url 'comercial:dashboard' %}" class="module-btn">
+            ACCEDER <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    {% endif %}
+    
+    {# Módulo Clientes #}
+    {% if user.perfilempleado.nivel >= 2 %}
+    <div class="module-card">
+        <div class="module-icon-container">
+            <i class="bi bi-headset module-icon"></i>
+        </div>
+        <h2 class="module-title">Clientes</h2>
+        <p class="module-description">
+            Gestione asistencias técnicas, reportes de servicio y seguimiento de clientes.
+        </p>
+        <a href="{% url 'clientes:dashboard' %}" class="module-btn">
+            ACCEDER <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    {% endif %}
+    
+</div>
+{% endblock %}

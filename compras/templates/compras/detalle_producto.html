@@ -1,0 +1,353 @@
+{% extends "control_horas/base.html" %}
+{% load humanize %} 
+{% block horizontal_breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'control_horas:main_dashboard' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'compras:compras_dashboard' %}">Compras</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'compras:deposito_dashboard' %}">Deposito</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'compras:deposito' %}">Inventario</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Detalles</li>
+    </ol>
+</nav>
+{% endblock horizontal_breadcrumbs %}
+
+{% block content %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        :root {
+            --burgundy-main: #7D1935;
+            --burgundy-hover: #5A1327;
+            --burgundy-light-accent: #B44A68;
+            --soft-gray-bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-dark: #1f2937;
+            --critico-bg: #fee2e2;
+            --critico-text: #b91c1c;
+            --warning-bg: #fffbe6;
+            --warning-text: #d97706;
+            --optimal-bg: #ecfdf5;
+            --optimal-text: #059669;
+        }
+
+        body {
+            background-color: var(--soft-gray-bg);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .text-burgundy-main { color: var(--burgundy-main); }
+        .bg-burgundy-main { background-color: var(--burgundy-main); }
+        .hover\:bg-burgundy-hover:hover { background-color: var(--burgundy-hover); }
+        .shadow-minimal { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06); }
+        .movement-header-bg { background-color: var(--burgundy-main); color: var(--card-bg); }
+        .tag-critico { background-color: var(--critico-bg); color: var(--critico-text); }
+        .tag-warning { background-color: var(--warning-bg); color: var(--warning-text); }
+        .tag-optimal { background-color: var(--optimal-bg); color: var(--optimal-text); }
+    </style>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    {% with stock=producto.Cantidad|default:0 min_stock=producto.MinimoAdmisible|default:0 %}
+    
+    <div class="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 bg-soft-gray-bg">
+        
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 pb-6 border-b border-gray-300">
+            <div class="mb-4 md:mb-0">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-text-dark leading-snug flex items-center">
+                    <i class="bi bi-box-seam-fill text-burgundy-main me-3 text-3xl"></i> 
+                    {{ producto.Producto|default:"Producto Desconocido" }}
+                </h1>
+                <p class="text-gray-500 mt-1 text-base font-medium">SKU: 
+                    <span class="font-mono font-bold text-gray-700">{{ producto.CodigoProducto|default:"N/D" }}</span>
+                </p>
+            </div>
+            
+            <button type="button" 
+                    class="inline-flex items-center justify-center rounded-lg border border-transparent bg-burgundy-main px-6 py-3 text-sm font-bold text-white shadow-minimal hover:bg-burgundy-hover transition duration-300 transform hover:scale-[1.01] w-full md:w-auto"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#editarProductoModal">
+                <i class="bi bi-pencil-square me-2"></i>
+                Editar Producto
+            </button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+            
+            <div class="lg:col-span-1 bg-card-bg p-8 rounded-xl shadow-minimal text-center 
+                          {% if stock <= min_stock %}
+                              border-4 border-critico-text ring-4 ring-red-200
+                          {% elif stock <= min_stock|add:10 %}
+                              border-4 border-warning-text ring-4 ring-amber-200
+                          {% else %}
+                              border-4 border-optimal-text ring-4 ring-emerald-200
+                          {% endif %}">
+                
+                <i class="bi bi-box-fill text-5xl text-burgundy-main mb-4"></i>
+                <p class="text-base font-extrabold text-gray-500 mb-4 uppercase tracking-wider">STOCK ACTUAL</p>
+                
+                <div class="text-8xl font-black tabular-nums leading-none 
+                                {% if stock <= min_stock %}text-critico-text{% elif stock <= min_stock|add:10 %}text-warning-text{% else %}text-optimal-text{% endif %}">
+                    {{ stock|floatformat:0 }}
+                </div>
+                
+                <div class="mt-6">
+                    {% if stock <= min_stock %}
+                        <span class="inline-flex items-center rounded-full tag-critico px-5 py-2 text-md font-bold">
+                            🚨 CRÍTICO: ¡Solicitar!
+                        </span>
+                    {% elif stock <= min_stock|add:10 %}
+                        <span class="inline-flex items-center rounded-full tag-warning px-5 py-2 text-md font-bold">
+                            ⚠️ BAJO: A tener en cuenta
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center rounded-full tag-optimal px-5 py-2 text-md font-bold">
+                            🟢 ÓPTIMO: Buen stock
+                        </span>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-gray-500 mt-4">Mínimo Aceptable: <span class="font-bold text-gray-700">{{ min_stock|floatformat:0 }}</span> unidades.</p>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                
+                <div class="bg-card-bg p-6 rounded-xl shadow-minimal ring-1 ring-gray-100">
+                    <h3 class="text-xl font-bold text-text-dark mb-4 pb-2 border-b border-gray-200 flex items-center">
+                        <i class="bi bi-info-circle mr-2 text-burgundy-main"></i> Detalles de Productos y Ubicación.
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-5"> 
+                        
+                        <div class="col-span-1">
+                            <p class="font-semibold text-gray-500 flex items-center mb-1 text-sm">
+                                <i class="bi bi-geo-alt-fill mr-2 text-burgundy-light-accent"></i> Ubicación
+                            </p>
+                            <span class="inline-block rounded-lg bg-burgundy-main/10 px-4 py-1.5 text-lg font-extrabold text-burgundy-main">
+                                {{ producto.Ubicacion|default:"No Asignada" }}
+                            </span>
+                        </div>
+                        
+                        <div class="col-span-1">
+                            <p class="font-semibold text-gray-500 flex items-center mb-1 text-sm">
+                                <i class="bi bi-palette-fill mr-2 text-burgundy-light-accent"></i> Marca
+                            </p>
+                            <p class="mt-1 text-gray-900 font-bold text-lg">{{ producto.Marca|default:"N/A" }}</p>
+                        </div>
+                        
+                        <div class="col-span-1">
+                            <p class="font-semibold text-gray-500 flex items-center mb-1 text-sm">
+                                <i class="bi bi-grid-fill mr-2 text-burgundy-light-accent"></i> Modelo
+                            </p>
+                            <p class="mt-1 text-gray-900 font-bold text-lg">{{ producto.Modelo|default:"N/A" }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-card-bg p-6 rounded-xl shadow-minimal ring-1 ring-gray-100">
+                    <h3 class="text-xl font-bold text-text-dark mb-4 pb-2 border-b border-gray-200 flex items-center">
+                        <i class="bi bi-currency-exchange mr-2 text-burgundy-main"></i> Lista de precios.
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-5">
+                        <div>
+                            <p class="font-semibold text-gray-500 uppercase text-xs tracking-wider">Precio Unitario (GS)</p>
+                            <p class="mt-1 text-gray-900 font-extrabold text-2xl tabular-nums">
+                                <span class="text-lg text-gray-500 mr-1">₲</span>{{ producto.PrecioGS|default:0|floatformat:0|intcomma }}
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <p class="font-semibold text-gray-500 uppercase text-xs tracking-wider">Precio Unitario (USD)</p>
+                            <p class="mt-1 text-gray-900 font-extrabold text-2xl tabular-nums">
+                                <span class="text-lg text-gray-500 mr-1">$</span>{{ producto.PrecioUSD|default:0|floatformat:2|intcomma }}
+                            </p>
+                        </div>
+                         <div>
+                            <p class="font-semibold text-gray-500 uppercase text-xs tracking-wider">Valor Total (GS)</p>
+                            <p class="mt-1 text-optimal-text font-extrabold text-2xl tabular-nums">
+                                <span class="text-lg text-gray-500 mr-1">₲</span>{{ producto.PrecioTotalGS|default:0|floatformat:0|intcomma }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-card-bg p-6 rounded-xl shadow-minimal ring-1 ring-gray-100 mb-12">
+            <h3 class="text-xl font-bold text-text-dark mb-4 pb-2 border-b border-gray-200 flex items-center">
+                <i class="bi bi-card-text mr-2 text-burgundy-main"></i> Descripción del producto.
+            </h3>
+            <p class="mt-1 text-gray-700 leading-relaxed text-base whitespace-pre-wrap">
+                {{ producto.Descripcion|default:"No hay una descripción detallada para este producto." }}
+            </p>
+        </div>
+
+        <div class="mt-16">
+            <h2 class="text-2xl font-bold text-text-dark mb-6 border-b pb-3 border-gray-300 flex items-center">
+                <i class="bi bi-clock-history mr-3 text-burgundy-main"></i> Historial de Movimientos.
+            </h2>
+
+            <div class="rounded-xl ring-1 ring-gray-200 shadow-minimal overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="movement-header-bg"> 
+                        <tr>
+                            <th scope="col" class="py-3 pl-6 pr-3 text-left text-xs font-extrabold uppercase tracking-wider min-w-[150px]">Fecha</th>
+                            <th scope="col" class="px-3 py-3 text-left text-xs font-extrabold uppercase tracking-wider min-w-[120px]">Tipo</th>
+                            <th scope="col" class="px-3 py-3 text-center text-xs font-extrabold uppercase tracking-wider min-w-[100px]">Cantidad</th>
+                            <th scope="col" class="px-3 py-3 text-left text-xs font-extrabold uppercase tracking-wider min-w-[150px] hidden sm:table-cell">Referencia</th> 
+                            <th scope="col" class="py-3 pr-6 pl-3 text-left text-xs font-extrabold uppercase tracking-wider min-w-[200px]">Observaciones</th>
+                        </tr>
+                    </thead>
+                    
+                    <tbody class="bg-card-bg divide-y divide-gray-100">
+                        {% for movimiento in movimientos %}
+                        <tr class="hover:bg-gray-50 transition duration-150">
+                            <td class="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-medium text-gray-800">
+                                <i class="bi bi-calendar-event mr-1 text-burgundy-light-accent"></i> {{ movimiento.fecha_movimiento|date:"d M Y" }}<br>
+                                <span class="text-xs text-gray-500"><i class="bi bi-clock mr-1"></i> {{ movimiento.fecha_movimiento|date:"H:i" }}</span>
+                            </td>
+                            
+                            <td class="whitespace-nowrap px-3 py-4 text-sm font-semibold">
+                                {% if movimiento.tipo_movimiento == 'ENTRADA' %} 
+                                    <span class="inline-flex items-center rounded-full tag-optimal px-3 py-1 text-xs font-bold">
+                                        <i class="bi bi-plus-circle-fill mr-1"></i> INGRESO
+                                    </span>
+                                {% elif movimiento.tipo_movimiento == 'SALIDA' %}
+                                    <span class="inline-flex items-center rounded-full tag-critico px-3 py-1 text-xs font-bold">
+                                        <i class="bi bi-dash-circle-fill mr-1"></i> EGRESO
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center rounded-full tag-warning px-3 py-1 text-xs font-bold">
+                                        <i class="bi bi-sliders mr-1"></i> AJUSTE
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td class="whitespace-nowrap px-3 py-4 text-center text-lg font-black tabular-nums 
+                                {% if movimiento.tipo_movimiento == 'ENTRADA' %}text-optimal-text{% elif movimiento.tipo_movimiento == 'SALIDA' %}text-critico-text{% else %}text-warning-text{% endif %}">
+                                {{ movimiento.cantidad_movida|floatformat:0 }}
+                            </td>
+                            
+                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-600 hidden sm:table-cell">
+                                <span class="font-mono text-gray-800">{{ movimiento.referencia|default:"N/A" }}</span>
+                            </td>
+
+                            <td class="py-4 pr-6 pl-3 text-sm text-gray-500 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">
+                                <span title="{{ movimiento.motivo|default:"Sin detalle." }}">
+                                    {{ movimiento.motivo|default:"Sin detalle."|truncatechars:50 }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="py-10 text-center text-gray-500 text-lg bg-white">
+                                <i class="bi bi-journal-x text-5xl mb-3 text-gray-300"></i>
+                                <p>No hay movimientos de stock recientes para este producto.</p>
+                                <p class="text-sm mt-2">Registra un **Ingreso** o **Egreso** para comenzar el historial.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-16 text-center">
+            <a href="{% url 'compras:deposito' %}" 
+               class="inline-flex justify-center items-center rounded-lg border border-gray-300 bg-white px-8 py-3 text-base font-bold text-gray-700 shadow-minimal hover:bg-gray-100 transition duration-300">
+                <i class="bi bi-arrow-left-circle-fill mr-2"></i> 
+                Volver a la Lista de Inventario
+            </a>
+        </div>
+
+    </div>
+
+    <!-- MODAL SIMPLE PARA EDITAR -->
+    <div class="modal fade" id="editarProductoModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Editar Producto</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <form method="POST" action="{% url 'compras:editar_producto' pk=producto.CodigoProducto %}">
+            {% csrf_token %}
+            <div class="modal-body">
+              
+              <div class="mb-3">
+                <label class="form-label fw-bold">Código (No editable)</label>
+                <input type="text" class="form-control" value="{{ producto.CodigoProducto }}" disabled>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Nombre *</label>
+                <input type="text" name="producto_nombre" class="form-control" value="{{ producto.Producto }}" required>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-bold">Marca</label>
+                  <input type="text" name="marca" class="form-control" value="{{ producto.Marca|default:'' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-bold">Modelo *</label>
+                  <input type="text" name="modelo" class="form-control" value="{{ producto.Modelo }}" required>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Ubicación *</label>
+                <input type="text" name="ubicacion" class="form-control" value="{{ producto.Ubicacion }}" required>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Descripción</label>
+                <textarea name="descripcion" class="form-control" rows="2">{{ producto.Descripcion|default:'' }}</textarea>
+              </div>
+
+              <hr>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-bold">Stock Actual</label>
+                  <input type="text" class="form-control" value="{{ producto.Cantidad|floatformat:0 }}" disabled>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-bold">Mínimo</label>
+                  <input type="number" name="minimo_admisible" class="form-control" value="{{ producto.MinimoAdmisible|floatformat:0 }}" step="0.01" min="0">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Máximo</label>
+                <input type="number" name="maximo_admisible" class="form-control" value="{{ producto.MaximoAdmisible|floatformat:0 }}" step="0.01" min="0">
+              </div>
+
+              <hr>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-bold">Precio GS</label>
+                  <input type="number" name="precio_gs" class="form-control" value="{{ producto.PrecioGS|floatformat:0 }}" step="0.01" min="0">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-bold">Precio USD</label>
+                  <input type="number" name="precio_usd" class="form-control" 
+                    value="{{ producto.PrecioUSD|default:0|floatformat:2 }}" 
+                    step="0.01" min="0">
+              </div>
+
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {% endwith %}
+{% endblock content %}

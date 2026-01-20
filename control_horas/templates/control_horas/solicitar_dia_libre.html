@@ -1,0 +1,447 @@
+{% extends "control_horas/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Solicitar Compensación{% endblock %}
+
+{% block extra_head %}
+    <style>
+        /* ========================================= */
+        /* VARIABLES Y BASE */
+        /* ========================================= */
+        :root {
+            --color-primary: #800020; /* Burdeos Principal */
+            --color-primary-light: #ab3e57;
+            --color-secondary: #6b7280; /* Gris para texto secundario */
+            --color-text-dark: #1f2937;
+            --color-border-subtle: #e5e7eb;
+            --color-bg-light: #f9fafb;
+            --color-danger: #ef4444;
+            --color-success: #10b981;
+        }
+
+        body {
+            background-color: var(--color-bg-light);
+        }
+
+        /* --- TÍTULO PRINCIPAL --- */
+        .page-main-title {
+            color: var(--color-text-dark);
+            font-weight: 800;
+            font-size: 2.25rem; 
+            margin-bottom: 2.5rem; /* Más espacio */
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .page-main-title i {
+            color: var(--color-primary);
+            font-size: 2.5rem;
+        }
+
+        /* ========================================= */
+        /* TARJETAS KPI (SALDO) - Diseño Plano */
+        /* ========================================= */
+        .kpi-card {
+            background-color: #ffffff;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 12px; /* Más redondeado */
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+            height: 100%;
+            overflow: hidden; /* Para el borde inferior */
+        }
+        
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .kpi-card-body {
+            padding: 1.5rem;
+        }
+
+        .kpi-card-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--color-secondary);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-card-content {
+            display: flex;
+            align-items: flex-end; /* Alinea ícono y valor */
+            justify-content: space-between;
+        }
+
+        .kpi-card-value {
+            font-size: 2.8rem; /* Tamaño destacado */
+            font-weight: 900;
+            line-height: 1.1;
+            color: var(--color-text-dark);
+        }
+
+        .kpi-card-icon {
+            font-size: 3.5rem;
+            opacity: 0.1;
+            color: var(--color-primary);
+        }
+        
+        /* Indicadores de color por borde inferior */
+        .kpi-card-footer {
+            height: 6px;
+            background-color: var(--color-border-subtle);
+        }
+        .kpi-success .kpi-card-footer { background-color: var(--color-success); }
+        .kpi-danger .kpi-card-footer { background-color: var(--color-danger); }
+        .kpi-info .kpi-card-footer { background-color: var(--color-primary-light); } 
+        .kpi-warning .kpi-card-footer { background-color: #fbbf24; } 
+        
+        .kpi-danger .kpi-card-value { color: var(--color-danger); }
+        .kpi-success .kpi-card-value { color: var(--color-success); }
+        .kpi-info .kpi-card-value { color: var(--color-primary); }
+
+
+        /* ========================================= */
+        /* CARDS PRINCIPALES (FORMULARIO E HISTORIAL) */
+        /* ========================================= */
+        .main-card {
+            background-color: #ffffff;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            height: 100%;
+        }
+
+        .main-card-header {
+            background-color: var(--color-bg-light);
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--color-border-subtle);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .main-card-header h5 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--color-primary);
+        }
+
+        .main-card-body {
+            padding: 2rem 1.5rem; /* Más padding interno */
+        }
+        
+        /* ========================================= */
+        /* FORMULARIOS Y BOTONES */
+        /* ========================================= */
+        .input-group-text {
+            background-color: var(--color-bg-light);
+            border: 1px solid var(--color-border-subtle);
+            border-right: none;
+            color: var(--color-secondary);
+            transition: all 0.3s;
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: var(--color-text-dark);
+            font-size: 0.95rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 0.25rem rgba(128, 0, 32, 0.25);
+        }
+        
+        .btn-primary {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+            font-weight: 600;
+            padding: 0.8rem 1.5rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-primary-light);
+            border-color: var(--color-primary-light);
+            transform: translateY(-1px);
+        }
+
+        /* ========================================= */
+        /* HISTORIAL Y BADGES */
+        /* ========================================= */
+        .list-group-item {
+            border-color: #f1f1f1;
+            padding: 1rem 1.5rem;
+        }
+
+        .history-date {
+            color: var(--color-primary);
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .history-details {
+            font-size: 0.875rem;
+            color: var(--color-secondary);
+        }
+
+        .badge {
+            font-weight: 700;
+            padding: 0.4rem 0.7rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .page-main-title {
+                font-size: 1.75rem;
+            }
+            .kpi-card-value {
+                font-size: 2.2rem;
+            }
+            .kpi-card-body {
+                padding: 1rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10">
+            
+            {# TÍTULO PRINCIPAL #}
+            <h1 class="page-main-title">
+                <i class="bi bi-calendar-check-fill"></i>
+                Solicitar Horas Compensatorias
+            </h1>
+            
+            {# MENSAJES DE DJANGO #}
+            {% if message %}
+                <div class="alert 
+                    {% if "Error" in message %}alert-danger{% else %}alert-success{% endif %}" 
+                    role="alert">
+                    
+                    <i class="bi 
+                        {% if "Error" in message %}
+                            bi-x-octagon-fill
+                        {% else %}
+                            bi-check-circle-fill
+                        {% endif %} 
+                        me-2">
+                    </i>
+                    
+                    <strong>{{ message }}</strong>
+                </div>
+            {% endif %}
+
+            {# TARJETAS KPI SUPERIORES (Diseño Plano con Borde Inferior) #}
+            <div class="row g-4 mb-5">
+                
+                {# Tarjeta 1: Saldo Acumulado #}
+                <div class="col-md-4">
+                    <div class="kpi-card {% if saldo_total.total_seconds|default:0 < 0 %}kpi-danger{% else %}kpi-success{% endif %}">
+                        <div class="kpi-card-body">
+                            <h6 class="kpi-card-title">Saldo Actual (H:M)</h6>
+                            <div class="kpi-card-content">
+                                <span class="kpi-card-value">
+                                    {{ saldo_display|default_if_none:"00:00:00" }}
+                                </span>
+                                <i class="bi bi-clock-fill kpi-card-icon"></i>
+                            </div>
+                        </div>
+                        <div class="kpi-card-footer"></div>
+                    </div>
+                </div>
+
+                {# Tarjeta 2: Empleado #}
+                <div class="col-md-4">
+                    <div class="kpi-card kpi-info">
+                        <div class="kpi-card-body">
+                            <h6 class="kpi-card-title">Funcionario</h6>
+                            <div class="kpi-card-content">
+                                <span class="kpi-card-value" style="font-size: 1.6rem; font-weight: 700; color: var(--color-text-dark);">
+                                    {{ request.user.username|capfirst|default_if_none:"N/A" }}
+                                </span>
+                                <i class="bi bi-person-circle kpi-card-icon"></i>
+                            </div>
+                        </div>
+                        <div class="kpi-card-footer"></div>
+                    </div>
+                </div>
+                
+                {# Tarjeta 3: Pendientes de Aprobación #}
+                <div class="col-md-4">
+                    <div class="kpi-card kpi-warning">
+                        <div class="kpi-card-body">
+                            <h6 class="kpi-card-title">Peticiones Pendientes</h6>
+                            <div class="kpi-card-content">
+                                <span class="kpi-card-value">
+                                    {{ pendientes_count|default:0 }}
+                                </span>
+                                <i class="bi bi-bell-fill kpi-card-icon"></i>
+                            </div>
+                        </div>
+                        <div class="kpi-card-footer"></div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            {# ALERTA DE ESTADO DE SALDO #}
+            <div class="alert mb-5 
+                {% if saldo_total.total_seconds|default:0 < 0 %} 
+                    alert-danger
+                {% elif saldo_total.total_seconds|default:0 < 28800 %}
+                    alert-warning
+                {% else %}
+                    alert-success
+                {% endif %}" role="alert">
+                
+                {% if saldo_total.total_seconds|default:0 < 0 %} 
+                    <i class="bi bi-exclamation-octagon-fill me-2"></i> 
+                    <strong>ATENCIÓN:</strong> Saldo negativo ({{ saldo_display|default_if_none:"00:00:00" }}).
+                {% elif saldo_total.total_seconds|default:0 < 28800 %}
+                    <i class="bi bi-info-circle-fill me-2"></i> 
+                    <strong>NOTA:</strong> Saldo disponible {{ saldo_display|default_if_none:"00:00:00" }} (Menos de 8 horas). 
+                {% else %}
+                    <i class="bi bi-check-circle-fill me-2"></i> 
+                    <strong>Saldo suficiente ({{ saldo_display|default_if_none:"00:00:00" }}).</strong>
+                {% endif %}
+            </div>
+
+            {# SECCIÓN PRINCIPAL: FORMULARIO E HISTORIAL #}
+            <div class="row g-5">
+                
+                {# COLUMNA 1: FORMULARIO #}
+                <div class="col-lg-6">
+                    <div class="main-card">
+                        <div class="main-card-header">
+                            <h5>
+                                <i class="bi bi-file-earmark-text"></i>
+                                Formulario de Petición de Compensación
+                            </h5>
+                        </div>
+                        <div class="main-card-body">
+                            <form method="post" class="needs-validation row g-4" novalidate>
+                                {% csrf_token %}
+                                
+                                <div class="col-12">
+                                    <label for="{{ form.fecha_libre.id_for_label }}" class="form-label">
+                                        Fecha del Día Libre: <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        {% render_field form.fecha_libre class="form-control" type="date" required="required" %}
+                                        <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
+                                    </div>
+                                    {% for error in form.fecha_libre.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="{{ form.horas_solicitadas_input.id_for_label }}" class="form-label">
+                                        Horas a Compensar (HH:MM): <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        {% render_field form.horas_solicitadas_input class="form-control" type="time" placeholder="08:00" step="300" required="required" %}
+                                        <span class="input-group-text"><i class="bi bi-stopwatch"></i></span>
+                                    </div>
+                                    {% for error in form.horas_solicitadas_input.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="{{ form.motivo.id_for_label }}" class="form-label">
+                                        Motivo:
+                                    </label>
+                                    <div class="input-group">
+                                        {% render_field form.motivo class="form-control" rows="3" placeholder="Describe brevemente el motivo..." %}
+                                        <span class="input-group-text align-items-start pt-2"><i class="bi bi-chat-left-text"></i></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12 mt-5">
+                                    <button type="submit" class="btn btn-primary btn-lg w-100 shadow">
+                                        <i class="bi bi-send-fill me-2"></i>Enviar Solicitud
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {# COLUMNA 2: HISTORIAL #}
+                <div class="col-lg-6">
+                    <div class="main-card">
+                        <div class="main-card-header">
+                            <h5>
+                                <i class="bi bi-clock-history"></i>
+                                Historial Reciente de Peticiones
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if solicitudes_recientes %}
+                                <div class="list-group list-group-flush">
+                                    {% for solicitud in solicitudes_recientes %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="history-date d-flex align-items-center">
+                                                    <i class="bi bi-calendar-event me-2 text-muted"></i>
+                                                    {{ solicitud.fecha_libre|date:"d M Y" }}
+                                                </div>
+                                                <span class="badge
+                                                    {% if solicitud.estado == 'APROBADO' %}bg-success{% elif solicitud.estado == 'RECHAZADO' %}bg-danger{% else %}bg-warning{% endif %}">
+                                                    {{ solicitud.estado }}
+                                                </span>
+                                            </div>
+                                            <div class="mt-2 d-flex justify-content-between align-items-center">
+                                                <div class="history-details">
+                                                    <i class="bi bi-stopwatch me-1"></i> Compensó **{{ solicitud.horas_solicitadas }}**
+                                                </div>
+                                                <div class="history-details text-end text-truncate ms-2" title="{{ solicitud.motivo|default:'Sin motivo' }}">
+                                                    <i class="bi bi-chat-left-text me-1"></i> {{ solicitud.motivo|default:"Sin motivo"|truncatechars:25 }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info text-center m-3" role="alert">
+                                    <i class="bi bi-info-circle me-2"></i>No tienes solicitudes recientes.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# SCRIPT DE VALIDACIÓN #}
+    <script>
+        (function () {
+            'use strict'
+
+            const forms = document.querySelectorAll('.needs-validation')
+
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+{% endblock %}

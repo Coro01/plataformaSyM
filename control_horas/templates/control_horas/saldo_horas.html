@@ -1,0 +1,420 @@
+{% extends "control_horas/base.html" %}
+
+{% block extra_head %}
+    <style>
+        /* ========================================= */
+        /* === ESTILOS VERSIÓN 5: GRÁFICOS Y VISUAL === */
+        /* ========================================= */
+        
+        /* --- PALETA Y BASE --- */
+        :root {
+            --color-primary: #800020; /* Burdeos Principal */
+            --color-primary-light: #fbeff0; /* Fondo Burdeos muy sutil */
+            --color-text-dark: #1f2937;
+            --color-text-medium: #6b7280;
+            --color-border-subtle: #e5e7eb;
+            --color-bg-panel: #ffffff;
+            --color-bg-alt: #f9fafb;
+            --color-positive: #10b981; /* Verde moderno */
+            --color-negative: #ef4444; /* Rojo moderno */
+        }
+        
+        /* --- CLASES AÑADIDAS PARA LA SOLUCIÓN 1 --- */
+        .text-saldo-positivo {
+            color: var(--color-positive);
+        }
+        .text-saldo-negativo {
+            color: var(--color-negative);
+        }
+        /* ------------------------------------------- */
+
+        /* --- TÍTULO PRINCIPAL --- */
+        .page-main-title {
+            color: var(--color-text-dark);
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .page-main-title i {
+            color: var(--color-primary);
+        }
+
+        /* --- CONTENEDOR DE EMPLEADO (Tarjeta Moderna) --- */
+        .employee-card {
+            background-color: var(--color-bg-panel);
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 10px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 3rem;
+            overflow: hidden;
+        }
+
+        .employee-card-header {
+            background-color: var(--color-primary);
+            color: #ffffff;
+            padding: 1rem 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .employee-card-header h5 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .employee-card-body {
+            padding: 1.5rem;
+        }
+
+        /* --- BADGES (Header Principal) --- */
+        .badge {
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .badge-saldo-positivo {
+            background-color: #d1f5e2;
+            color: var(--color-positive);
+        }
+        .badge-saldo-negativo {
+            background-color: #fce7e8;
+            color: var(--color-negative);
+        }
+        
+        /* --- SECCIÓN DE GRÁFICOS Y KPI --- */
+        .kpi-chart-section {
+            background-color: var(--color-primary-light);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .kpi-list-compact {
+            flex-grow: 1;
+        }
+
+        .kpi-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px dotted rgba(128, 0, 32, 0.2);
+        }
+
+        .kpi-item:last-child {
+            border-bottom: none;
+        }
+
+        .kpi-label {
+            font-size: 0.9rem;
+            color: var(--color-text-medium);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .kpi-value-main {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--color-text-dark);
+        }
+
+        /* --- PLACEHOLDER DE GRÁFICO (Doughnut Chart Estático) --- */
+        .chart-placeholder-wrapper {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            flex-shrink: 0;
+            /* Placeholder: Usar conic-gradient para simular un gráfico de dona */
+            background: conic-gradient(
+                var(--color-primary) 0% 70%, 
+                var(--color-border-subtle) 70% 100%
+            );
+        }
+        
+        .chart-placeholder-inner {
+            background-color: var(--color-primary-light);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.2;
+        }
+        
+        /* --- LISTA DE REGISTROS (Compacta con Foco en la Fecha) --- */
+        .registros-list {
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .registro-item {
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid var(--color-border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+
+        .registro-item:hover {
+            background-color: var(--color-bg-alt);
+        }
+
+        .registro-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .registro-date-box {
+            background-color: var(--color-bg-alt);
+            padding: 0.4rem 0.6rem;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            line-height: 1.1;
+        }
+
+        .registro-detalles {
+            font-size: 0.85rem;
+            color: var(--color-text-medium);
+            line-height: 1.3;
+        }
+        
+        .registro-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .registro-badge-sm {
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        /* --- BOTONES Y DIVISORES --- */
+        .btn-sm {
+            padding: 0.2rem 0.4rem; /* Botón de edición más pequeño */
+            font-size: 0.75rem;
+        }
+
+        .column-divider {
+            border-right: 1px solid var(--color-border-subtle);
+            padding-right: 1.5rem;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 991.98px) {
+            .column-divider {
+                border-right: none;
+                border-bottom: 1px solid var(--color-border-subtle);
+                margin-bottom: 1.5rem;
+                padding-bottom: 1.5rem;
+                padding-right: 0;
+            }
+            .kpi-chart-section {
+                flex-direction: column;
+                text-align: center;
+            }
+            .kpi-list-compact {
+                width: 100%;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+        
+        {# TÍTULO PRINCIPAL #}
+        <h1 class="page-main-title">
+            <i class="bi bi-bar-chart-line"></i>
+            Análisis y Resumen de Horas
+        </h1>
+
+        {# MENSAJES DE DJANGO #}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {# LOOP DE EMPLEADOS #}
+        {% for empleado_data in contexto_empleados %}
+            
+            <div class="employee-card">
+                
+                {# ENCABEZADO #}
+                <div class="employee-card-header">
+                    <h5>
+                        <i class="bi bi-person-circle"></i>
+                        Funcionario: {{ empleado_data.nombre|capfirst }}
+                    </h5>
+                    
+                    {# Badge de Saldo Total (AÑADIDO TOOLTIP) #}
+                    {% if empleado_data.saldo_total|slice:'0:1' == '-' %}
+                        <span class="badge badge-saldo-negativo" title="Tiempo total que el empleado debe a la empresa.">
+                            <i class="bi bi-dash"></i> Saldo Total: {{ empleado_data.saldo_total }}
+                        </span>
+                    {% else %}
+                        <span class="badge badge-saldo-positivo" title="Tiempo total acumulado a favor del empleado (horas extras netas).">
+                            <i class="bi bi-plus"></i> Saldo Total: {{ empleado_data.saldo_total }}
+                        </span>
+                    {% endif %}
+                </div>
+                
+                {# CUERPO #}
+                <div class="employee-card-body">
+                    <div class="row">
+                        
+                        {# COLUMNA 1: GRÁFICO Y KPI #}
+                        <div class="col-md-5 column-divider">
+                            <h6 class="section-title">
+                                <i class="bi bi-pie-chart"></i>
+                                Resumen de las jornadas diarias
+                            </h6>
+                            
+                            <div class="kpi-chart-section">
+                                
+                                {# Gráfico Placeholder #}
+                                <div class="chart-placeholder-wrapper" title="Gráfico Placeholder Estático (70% de Horas Cumplidas)">
+                                    <div class="chart-placeholder-inner">
+                                        ~70%<br><small>H. Cumplidas</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="kpi-list-compact">
+                                    <div class="kpi-item">
+                                        <span class="kpi-label"><i class="bi bi-globe"></i> Saldo Total</span>
+                                        {# Saldo Total KPI (AÑADIDO TOOLTIP) #}
+                                        <span class="kpi-value-main" title="Acumulado neto de todas las horas extras y faltantes hasta la fecha.">
+                                            {{ empleado_data.saldo_total }}
+                                        </span>
+                                    </div>
+                                    <div class="kpi-item">
+                                        <span class="kpi-label"><i class="bi bi-calendar-check"></i> Saldo {{ mes_actual }}</span>
+                                        {# Saldo Mensual KPI (USANDO CLASES CSS Y AÑADIDO TOOLTIP) #}
+                                        <span class="kpi-value-main 
+                                            {% if empleado_data.saldo_mensual|slice:'0:1' == '-' %}
+                                                text-saldo-negativo
+                                            {% else %}
+                                                text-saldo-positivo
+                                            {% endif %}
+                                            " title="Saldo neto del mes actual ({{ mes_actual }}).">
+                                            {{ empleado_data.saldo_mensual }}
+                                        </span>
+                                    </div>
+                                    <div class="kpi-item">
+                                        <span class="kpi-label"><i class="bi bi-clock"></i> Horas Base (40h)</span>
+                                        <span class="kpi-value-main" title="Horas de jornada laboral estándar por semana/periodo.">40:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {# COLUMNA 2: ÚLTIMOS REGISTROS #}
+                        <div class="col-md-7 ps-md-3">
+                            <h6 class="section-title">
+                                <i class="bi bi-list-task"></i>
+                                Últimos 5 Fichajes
+                            </h6>
+                            
+                            {% if empleado_data.registros %}
+                                <div class="registros-list">
+                                    {% for registro in empleado_data.registros %}
+                                        <div class="registro-item">
+                                            
+                                            {# Fecha y Detalles #}
+                                            <div class="registro-info">
+                                                <span class="registro-date-box">
+                                                    {{ registro.fecha|date:"d" }}<br>
+                                                    <small>{{ registro.fecha|date:"M" }}</small>
+                                                </span>
+                                                <div>
+                                                    <div class="registro-fecha">
+                                                        {{ registro.fecha|date:"l" }}
+                                                    </div>
+                                                    <div class="registro-detalles">
+                                                        {{ registro.entrada|date:"H:i" }} - {{ registro.salida|date:"H:i" }}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {# Saldo y Acciones #}
+                                            <div class="registro-actions">
+                                                {# Saldo del Día (AÑADIDO TOOLTIP) #}
+                                                {% if registro.horas_extras|slice:'0:1' == '-' %}
+                                                    <span class="registro-badge-sm badge-saldo-negativo" title="Tiempo faltante en esta jornada.">
+                                                        {{ registro.horas_extras }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="registro-badge-sm badge-saldo-positivo" title="Horas extras generadas en esta jornada.">
+                                                        +{{ registro.horas_extras }}
+                                                    </span>
+                                                {% endif %}
+
+                                                {# Botón de Edición #}
+                                                <a href="{% url 'control_horas:editar_registro' registro.id %}" 
+                                                    class="btn btn-sm btn-outline-secondary" 
+                                                    title="Editar Registro">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-light" role="alert">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    No hay registros recientes para este empleado.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        {% empty %}
+            <div class="alert alert-warning" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                No hay perfiles de empleados registrados en el sistema.
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
