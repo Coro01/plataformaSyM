@@ -9,7 +9,15 @@ SECRET_KEY = 'tu-clave-secreta-aqui'
 
 # Configuración de Desarrollo
 DEBUG = True
-ALLOWED_HOSTS = ['*'] 
+ALLOWED_HOSTS = ['plataformasym.onrender.com', '127.0.0.1', 'localhost']
+# Permite que Django confíe en el dominio de Render para las galletas CSRF
+CSRF_TRUSTED_ORIGINS = [
+    'https://plataformasym.onrender.com',
+]
+
+# Configuración adicional de seguridad para producción
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 # --- LISTAS DE CONFIGURACIÓN ---
 INSTALLED_APPS = [
