@@ -58,9 +58,10 @@ ROOT_URLCONF = 'mi_proyecto.urls'
 # Configuración de Base de Datos Inteligente
 DATABASES = {
     'default': dj_database_url.config(
-        # Esta URL se usará cuando estés en tu PC (Local)
-        default='postgresql://postgres:SyMAutomation2022*@db.davyfwkbdqvfwfuftvam.supabase.co:5432/postgres',
-        conn_max_age=600
+        # Busca la variable de Render, si no existe usa SQLite para no dar error de build
+        default=os.environ.get('DATABASE_URL', f'sqlite:///{BASE_DIR / "db.sqlite3"}'),
+        conn_max_age=600,
+        ssl_require=True # Esto fuerza el SSL que Supabase exige
     )
 }
 TEMPLATES = [
