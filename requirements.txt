@@ -7,6 +7,7 @@ cffi==2.0.0
 charset-normalizer==3.4.4
 cryptography==46.0.3
 cssselect2==0.8.0
+dj-database-url==3.1.0
 Django==5.2.7
 django-widget-tweaks==1.5.0
 et_xmlfile==2.0.0
@@ -25,6 +26,7 @@ pandas==2.3.3
 pdfminer.six==20251107
 pdfplumber==0.11.8
 pillow==12.0.0
+psycopg2-binary==2.9.11
 pycairo==1.29.0
 pycparser==2.23
 pydyf==0.12.1
