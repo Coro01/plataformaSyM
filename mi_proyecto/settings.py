@@ -58,10 +58,9 @@ ROOT_URLCONF = 'mi_proyecto.urls'
 # Configuración de Base de Datos Inteligente
 DATABASES = {
     'default': dj_database_url.config(
-        # Busca la variable de Render, si no existe usa SQLite para no dar error de build
         default=os.environ.get('DATABASE_URL', f'sqlite:///{BASE_DIR / "db.sqlite3"}'),
         conn_max_age=600,
-        ssl_require=True # Esto fuerza el SSL que Supabase exige
+        ssl_require=True  
     )
 }
 TEMPLATES = [
